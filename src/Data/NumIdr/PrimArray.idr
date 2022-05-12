@@ -48,7 +48,7 @@ unsafeIndex n arr = unsafePerformIO $ arrayDataGet n $ content arr
 export
 index : Nat -> PrimArray a -> Maybe a
 index n arr = if n < length arr
-                then Just $ assert_total $ unsafeIndex n arr
+                then Just $ unsafeIndex n arr
                 else Nothing
 
 
@@ -59,7 +59,7 @@ toList arr = iter (length arr) []
     iter : Nat -> List a -> List a
     iter Z acc = acc
     iter (S n) acc = let el = unsafeIndex n arr
-                     in  assert_total $ iter n (el :: acc)
+                     in  iter n (el :: acc)
 
 export
 fromList : List a -> PrimArray a
