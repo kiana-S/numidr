@@ -1,7 +1,6 @@
 module Data.NumIdr.Array.Array
 
 import Data.Vect
-import Data.Reify
 import Data.NumIdr.PrimArray
 import Data.NumIdr.Array.Order
 
@@ -9,28 +8,30 @@ import Data.NumIdr.Array.Order
 
 
 export
-record Array {0 rk : Nat} (s : Vect rk Nat) a where
-  constructor MkArray
-  shape : Reify s
-  strides : Vect rk Nat
-  contents : PrimArray a
+data Array : Vect rk Nat -> Type -> Type where
+  MkArray : (ord : Order rk) -> (sts : Vect rk Nat) ->
+              (s : Vect rk Nat) -> PrimArray a -> Array s a
 
 
 export
 getPrim : Array s a -> PrimArray a
-getPrim = contents
+getPrim (MkArray _ _ _ arr) = arr
+
+export
+getOrder : Array {rk} s a -> Order rk
+getOrder (MkArray ord _ _ _) = ord
 
 export
 getStrides : Array {rk} s a -> Vect rk Nat
-getStrides = strides
+getStrides (MkArray _ sts _ _) = sts
 
 export
 size : Array s a -> Nat
-size arr = length arr.contents
+size = length . getPrim
 
 export
 shape : Array {rk} s a -> Vect rk Nat
-shape arr = getReify arr.shape
+shape (MkArray _ _ s _) = s
 
 export
 rank : Array s a -> Nat
@@ -50,3 +51,9 @@ public export
 Vects : Vect rk Nat -> Type -> Type
 Vects []     a = a
 Vects (d::s) a = Vect d (Vects s a)
+
+
+export
+reshape' : (s' : Vect rk' Nat) -> Order rk -> Array {rk} s a ->
+             product s = product s' => Array rk' s' a
+reshape' s' ord arr = MkArray 
