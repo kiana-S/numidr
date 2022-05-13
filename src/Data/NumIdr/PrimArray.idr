@@ -27,6 +27,13 @@ arrayDataSet n x arr = fromPrim $ prim__arraySet arr (cast n) x
 
 
 export
+unsafeFromIns : Nat -> List (Nat, a) -> PrimArray a
+unsafeFromIns size ins = unsafePerformIO $ do
+    arr <- newArrayData size (believe_me ())
+    for_ ins $ \(i,x) => arrayDataSet i x arr
+    pure $ MkPrimArray size arr
+
+export
 create : Nat -> (Nat -> a) -> PrimArray a
 create size f = unsafePerformIO $ do
     arr <- newArrayData size (believe_me ())
@@ -38,7 +45,6 @@ create size f = unsafePerformIO $ do
     addToArray loc (S n) arr
         = do arrayDataSet loc (f loc) arr
              addToArray (S loc) n arr
-
 
 
 export
