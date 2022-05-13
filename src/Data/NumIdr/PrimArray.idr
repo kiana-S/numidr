@@ -48,13 +48,13 @@ create size f = unsafePerformIO $ do
 
 
 export
-unsafeIndex : Nat -> PrimArray a -> a
-unsafeIndex n arr = unsafePerformIO $ arrayDataGet n $ content arr
+index : Nat -> PrimArray a -> a
+index n arr = unsafePerformIO $ arrayDataGet n $ content arr
 
 export
-index : Nat -> PrimArray a -> Maybe a
-index n arr = if n < length arr
-                then Just $ unsafeIndex n arr
+safeIndex : Nat -> PrimArray a -> Maybe a
+safeIndex n arr = if n < length arr
+                then Just $ index n arr
                 else Nothing
 
 
@@ -64,7 +64,7 @@ toList arr = iter (length arr) []
   where
     iter : Nat -> List a -> List a
     iter Z acc = acc
-    iter (S n) acc = let el = unsafeIndex n arr
+    iter (S n) acc = let el = index n arr
                      in  iter n (el :: acc)
 
 export
@@ -78,5 +78,5 @@ fromList xs = create (length xs)
 
 export
 map : (a -> b) -> PrimArray a -> PrimArray b
-map f arr = create (length arr) (\n => f $ unsafeIndex n arr)
+map f arr = create (length arr) (\n => f $ index n arr)
 

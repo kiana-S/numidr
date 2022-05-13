@@ -69,7 +69,7 @@ reshape s' = reshape' s' (orderOfShape s' COrder)
 
 export
 index : Coords s -> Array s a -> a
-index is arr = unsafeIndex (computeLoc (getStrides arr) is) (getPrim arr)
+index is arr = index (computeLoc (getStrides arr) is) (getPrim arr)
 
 
 export
@@ -80,3 +80,4 @@ export
 main : IO ()
 main = do
         printLn $ index [0,1,0] test
+        printLn $ index [1,1,2] test
