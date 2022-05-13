@@ -6,17 +6,16 @@ import Data.Permutation
 %default total
 
 
-export
-Order : (rk : Nat) -> Type
-Order = Permutation
+public export
+data Order : (rk : Nat) -> Type where
+  COrder : Order rk
+  FOrder : Order rk
+
 
 export
-COrder : {rk : Nat} -> Order rk
-COrder = identity
+orderOfShape : (0 s : Vect rk Nat) -> Order (length s) -> Order rk
+orderOfShape s ord = rewrite sym (lengthCorrect s) in ord
 
-export
-FOrder : {rk : Nat} -> Order rk
-FOrder = reversed
 
 
 scanr : (el -> res -> res) -> res -> Vect len el -> Vect (S len) res
@@ -27,4 +26,5 @@ scanr f q0 (x::xs) = f x (head qs) :: qs
 
 export
 calcStrides : Order rk -> Vect rk Nat -> Vect rk Nat
-calcStrides ord v = permuteVect ord $ tail $ scanr (*) 1 v
+calcStrides COrder v = tail $ scanr (*) 1 v
+calcStrides FOrder v = init $ scanl (*) 1 v
