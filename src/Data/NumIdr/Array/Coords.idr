@@ -5,16 +5,18 @@ import Data.Vect
 %default total
 
 
+||| A type-safe coordinate system for an array. The coordinates are
+||| values of `Fin dim`, where `dim` is the dimension of each axis.
 public export
 data Coords : (s : Vect rk Nat) -> Type where
   Nil  : Coords Nil
   (::) : Fin dim -> Coords s -> Coords (dim :: s)
 
+||| Forget the shape of the array by converting each index to type `Nat`.
 export
 toNats : Coords {rk} s -> Vect rk Nat
 toNats [] = []
 toNats (i :: is) = finToNat i :: toNats is
-
 
 
 public export
@@ -44,6 +46,8 @@ index []      x = x
 index (i::is) v = index is $ index i v
 
 
+||| Compute the memory location of an array element
+||| given its coordinate and the strides of the array.
 export
-computeLoc : Vect rk Nat -> Coords {rk} s -> Nat
-computeLoc sts is = sum $ zipWith (*) sts (toNats is)
+getLocation : Vect rk Nat -> Coords {rk} s -> Nat
+getLocation sts is = sum $ zipWith (*) sts (toNats is)
