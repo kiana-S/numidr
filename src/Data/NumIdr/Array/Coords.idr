@@ -46,8 +46,12 @@ index []      x = x
 index (i::is) v = index is $ index i v
 
 
+export
+getLocation' : (sts : Vect rk Nat) -> (is : Vect rk Nat) -> Nat
+getLocation' = sum .: zipWith (*)
+
 ||| Compute the memory location of an array element
 ||| given its coordinate and the strides of the array.
 export
 getLocation : Vect rk Nat -> Coords {rk} s -> Nat
-getLocation sts is = sum $ zipWith (*) sts (toNats is)
+getLocation sts is = getLocation' sts (toNats is)

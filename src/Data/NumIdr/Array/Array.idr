@@ -31,20 +31,27 @@ data Array : (s : Vect rk Nat) -> (a : Type) -> Type where
   ||| *strides*, which determine how indexes into the internal array should be
   ||| performed. This is how the order of the array is configurable.
   |||
-  ||| @ s   The shape of the array
+  ||| @ ord The order of the elements of the array
   ||| @ sts The strides of the array
-  MkArray : (s : Vect rk Nat) -> (sts : Vect rk Nat) -> PrimArray a -> Array s a
+  ||| @ s   The shape of the array
+  MkArray : (ord : Order) -> (sts : Vect rk Nat) ->
+            (s : Vect rk Nat) -> PrimArray a -> Array s a
 
 
 ||| Extract the primitive array value.
 export
 getPrim : Array s a -> PrimArray a
-getPrim (MkArray _ _ arr) = arr
+getPrim (MkArray _ _ _ arr) = arr
+
+||| The order of the elements of the array
+export
+getOrder : Array s a -> Order
+getOrder (MkArray ord _ _ _) = ord
 
 ||| The strides of the array, returned in the same axis order as in the shape.
 export
 getStrides : Array {rk} s a -> Vect rk Nat
-getStrides (MkArray _ sts _) = sts
+getStrides (MkArray _ sts _ _) = sts
 
 ||| The total number of elements of the array
 ||| This is equivalent to `product s`.
@@ -55,7 +62,7 @@ size = length . getPrim
 ||| The shape of the array
 export
 shape : Array {rk} s a -> Vect rk Nat
-shape (MkArray s _ _) = s
+shape (MkArray _ _ s _) = s
 
 ||| The rank of the array
 export
@@ -69,8 +76,8 @@ rank = length . shape
 ||| @ s   The shape of the constructed array
 ||| @ ord The order to interpret the elements
 export
-fromVect' : (s : Vect rk Nat) -> (ord : Order rk) -> Vect (product s) a -> Array s a
-fromVect' s ord v = MkArray s (calcStrides ord s) (fromList $ toList v)
+fromVect' : (s : Vect rk Nat) -> (ord : Order) -> Vect (product s) a -> Array s a
+fromVect' s ord v = MkArray ord (calcStrides ord s) s (fromList $ toList v)
 
 ||| Create an array given a vector of its elements. The elements of the vector
 ||| are assembled into the provided shape using row-major order (the last axis is the
@@ -88,19 +95,19 @@ fromVect s = fromVect' s COrder
 ||| @ s   The shape of the constructed array
 ||| @ ord The order of the constructed array
 export
-array' : (s : Vect rk Nat) -> (ord : Order rk) -> Vects s a -> Array s a
-array' s ord v = MkArray s sts (unsafeFromIns (product s) ins)
+array' : (s : Vect rk Nat) -> (ord : Order) -> Vects s a -> Array s a
+array' s ord v = MkArray ord sts s (unsafeFromIns (product s) ins)
   where
     sts : Vect rk Nat
     sts = calcStrides ord s
 
     ins : List (Nat, a)
-    ins = collapse $ mapWithIndex (\i,x => (sum $ zipWith (*) i sts, x)) v
+    ins = collapse $ mapWithIndex (\is,x => (getLocation' sts is, x)) v
 
 ||| Construct an array using a structure of nested vectors.
 export
 array : {s : _} -> Vects s a -> Array s a
-array v = MkArray s (calcStrides COrder s) (fromList $ collapse v)
+array v = MkArray COrder (calcStrides COrder s) s (fromList $ collapse v)
 
 
 ||| Reshape the array into the given shape and reinterpret it according to
@@ -109,20 +116,17 @@ array v = MkArray s (calcStrides COrder s) (fromList $ collapse v)
 ||| @ s'  The shape to convert the array to
 ||| @ ord The order to reinterpret the array by
 export
-reshape' : (s' : Vect rk' Nat) -> (ord : Order rk') -> Array {rk} s a ->
+reshape' : (s' : Vect rk' Nat) -> (ord : Order) -> Array {rk} s a ->
              product s = product s' => Array s' a
-reshape' s' ord' arr = MkArray s' (calcStrides ord' s') (getPrim arr)
+reshape' s' ord' arr = MkArray ord' (calcStrides ord' s') s' (getPrim arr)
 
 ||| Reshape the array into the given shape.
-|||
-||| The array is also reinterpreted in row-major order; if this is undesirable,
-||| then `reshape'` must be used instead.
 |||
 ||| @ s' The shape to convert the array to
 export
 reshape : (s' : Vect rk' Nat) -> Array {rk} s a ->
             product s = product s' => Array s' a
-reshape s' = reshape' s' COrder
+reshape s' arr = reshape' s' (getOrder arr) arr
 
 
 ||| Index the array using the given `Coords` object.
