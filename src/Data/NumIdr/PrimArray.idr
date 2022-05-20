@@ -1,5 +1,7 @@
 module Data.NumIdr.PrimArray
 
+import Data.Nat
+import Data.IORef
 import Data.IOArray.Prims
 
 %default total
@@ -92,3 +94,56 @@ export
 map : (a -> b) -> PrimArray a -> PrimArray b
 map f arr = create (length arr) (\n => f $ index n arr)
 
+
+export
+unsafeZipWith : (a -> b -> c) -> PrimArray a -> PrimArray b -> PrimArray c
+unsafeZipWith f a b = create (length a) (\n => f (index n a) (index n b))
+
+export
+unsafeZipWith3 : (a -> b -> c -> d) ->
+                 PrimArray a -> PrimArray b -> PrimArray c -> PrimArray d
+unsafeZipWith3 f a b c = create (length a) (\n => f (index n a) (index n b) (index n c))
+
+export
+unzipWith : (a -> (b, c)) -> PrimArray a -> (PrimArray b, PrimArray c)
+unzipWith f arr = (map (fst . f) arr, map (snd . f) arr)
+
+export
+unzipWith3 : (a -> (b, c, d)) -> PrimArray a -> (PrimArray b, PrimArray c, PrimArray d)
+unzipWith3 f arr = (map ((\(x,_,_) => x) . f) arr,
+                          map ((\(_,y,_) => y) . f) arr,
+                          map ((\(_,_,z) => z) . f) arr)
+
+
+export
+foldl : (b -> a -> b) -> b -> PrimArray a -> b
+foldl f z (MkPrimArray size arr) = unsafePerformIO $ do
+    ref <- newIORef z
+    for_ [0..pred size] $ \n => do
+        x <- readIORef ref
+        y <- arrayDataGet n arr
+        writeIORef ref (f x y)
+    readIORef ref
+
+export
+foldr : (a -> b -> b) -> b -> PrimArray a -> b
+foldr f z (MkPrimArray size arr) = unsafePerformIO $ do
+    ref <- newIORef z
+    for_ [pred size..0] $ \n => do
+         x <- arrayDataGet n arr
+         y <- readIORef ref
+         writeIORef ref (f x y)
+    readIORef ref
+
+export
+traverse : Applicative f => (a -> f b) -> PrimArray a -> f (PrimArray b)
+traverse f = map fromList . traverse f . toList
+
+
+||| Compares two primitive arrays for equal elements. This function assumes
+||| the arrays same the same length; it must not be used in any other case.
+export
+unsafeEq : Eq a => PrimArray a -> PrimArray a -> Bool
+unsafeEq a b = unsafePerformIO $
+                 map (concat @{All}) $ for [0..pred (arraySize a)] $
+                 \n => (==) <$> arrayDataGet n (content a) <*> arrayDataGet n (content b)

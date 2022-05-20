@@ -42,7 +42,6 @@ namespace Coords
       mapWithIndex' f (x::xs) = f Z x :: mapWithIndex' (f . S) xs
 
 
-  export
   index : Coords s -> Vects s a -> a
   index []      x = x
   index (i::is) v = index is $ index i v

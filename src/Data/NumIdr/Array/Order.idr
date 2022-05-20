@@ -21,6 +21,15 @@ data Order : Type where
   FOrder : Order
 
 
+public export
+Eq Order where
+  COrder == COrder = True
+  FOrder == FOrder = True
+  COrder == FOrder = False
+  FOrder == COrder = False
+
+
+
 scanr : (el -> res -> res) -> res -> Vect len el -> Vect (S len) res
 scanr _ q0 []      = [q0]
 scanr f q0 (x::xs) = f x (head qs) :: qs
