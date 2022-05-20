@@ -1,5 +1,6 @@
 module Data.NumIdr.Array.Array
 
+import Data.List
 import Data.List1
 import Data.Vect
 import Data.Zippable
@@ -260,10 +261,6 @@ display = printLn . PrimArray.toList . getPrim
 
 
 export
-Functor (Array s) where
-  map f (MkArray ord sts s arr) = MkArray ord sts s (map f arr)
-
-export
 Zippable (Array s) where
   zipWith f a b = rewrite shapeEq a
                   in MkArray (getOrder a) (strides a) _ $
@@ -288,6 +285,10 @@ Zippable (Array s) where
                              (a, b, c) =>  (MkArray (getOrder arr) (strides arr) _ a,
                                             MkArray (getOrder arr) (strides arr) _ b,
                                             MkArray (getOrder arr) (strides arr) _ c)
+
+export
+Functor (Array s) where
+  map f (MkArray ord sts s arr) = MkArray ord sts s (map f arr)
 
 export
 {s : _} -> Applicative (Array s) where
@@ -329,12 +330,34 @@ export
 {s : _} -> Monoid a => Monoid (Array s a) where
   neutral = constant s neutral
 
-
 -- the shape must be known at runtime due to `fromInteger`. If `fromInteger`
 -- were moved into its own interface, this constraint could be removed.
+
+export
 {s : _} -> Num a => Num (Array s a) where
   (+) = zipWith (+)
   (*) = zipWith (*)
 
   fromInteger = constant s . fromInteger
 
+
+export
+Show a => Show (Array s a) where
+  showPrec d arr = let orderedElems = PrimArray.toList $ getPrim $
+                         if getOrder arr == COrder then arr else reorder COrder arr
+                   in  showCon d "array " $ concat $ insertPunct (shape arr) $ map show orderedElems
+    where
+      splitWindow : Nat -> List String -> List (List String)
+      splitWindow n xs = case splitAt n xs of
+                           (xs, []) => [xs]
+                           (l1, l2) => l1 :: splitWindow n (assert_smaller xs l2)
+
+      insertPunct : Vect rk Nat -> List String -> List String
+      insertPunct [] strs = strs
+      insertPunct [d] strs = "[" :: intersperse ", " strs `snoc` "]"
+      insertPunct (Z :: s) strs = ["[","]"]
+      insertPunct (d :: s) strs =
+        let secs = if null strs
+                      then List.replicate d ("[]" :: Prelude.Nil)
+                      else map (insertPunct s) $ splitWindow (length strs `div` d) strs
+        in  "[" :: (concat $ intersperse [", "] secs) `snoc` "]"
