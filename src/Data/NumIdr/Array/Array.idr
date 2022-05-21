@@ -78,14 +78,9 @@ rank : Array s a -> Nat
 rank = length . shape
 
 
---------------------------------------------------------------------------------
--- Array constructors
---------------------------------------------------------------------------------
-
 
 shapeEq : (arr : Array s a) -> s = shape arr
 shapeEq (MkArray _ _ _ _) = Refl
-
 
 -- Get a list of all coordinates
 getAllCoords' : Vect rk Nat -> List (Vect rk Nat)
@@ -97,11 +92,35 @@ getAllCoords (Z :: s) = []
 getAllCoords (S d :: s) = [| forget (allFins d) :: getAllCoords s |]
 
 
-constant' : (s : Vect rk Nat) -> (ord : Order) -> a -> Array s a
-constant' s ord x = MkArray ord (calcStrides ord s) s (create (product s) (const x))
+--------------------------------------------------------------------------------
+-- Array constructors
+--------------------------------------------------------------------------------
 
-constant : (s : Vect rk Nat) -> a -> Array s a
-constant s = constant' s COrder
+
+||| Create an array by repeating a single value.
+|||
+||| @ s    The shape of the constructed array
+||| @ ord  The order of the constructed array
+export
+repeat' : (s : Vect rk Nat) -> (ord : Order) -> a -> Array s a
+repeat' s ord x = MkArray ord (calcStrides ord s) s (constant (product s) x)
+
+||| Create an array by repeating a single value.
+||| To specify the order of the array, use `repeat'`.
+|||
+||| @ s The shape of the constructed array
+export
+repeat : (s : Vect rk Nat) -> a -> Array s a
+repeat s = repeat' s COrder
+
+
+export
+zeros : Num a => (s : Vect rk Nat) -> Array s a
+zeros s = repeat s 0
+
+export
+ones : Num a => (s : Vect rk Nat) -> Array s a
+ones s = repeat s 1
 
 ||| Create an array given a vector of its elements. The elements of the vector
 ||| are arranged into the provided shape using the provided order.
@@ -113,14 +132,30 @@ fromVect' : (s : Vect rk Nat) -> (ord : Order) -> Vect (product s) a -> Array s 
 fromVect' s ord v = MkArray ord (calcStrides ord s) s (fromList $ toList v)
 
 ||| Create an array given a vector of its elements. The elements of the vector
-||| are assembled into the provided shape using row-major order (the last axis is the
+||| are arranged into the provided shape using row-major order (the last axis is the
 ||| least significant).
-||| To specify the order of the array, see `fromVect'`.
+||| To specify the order of the array, use `fromVect'`.
 |||
 ||| @ s The shape of the constructed array
 export
 fromVect : (s : Vect rk Nat) -> Vect (product s) a -> Array s a
 fromVect s = fromVect' s COrder
+
+||| Create an array by taking values from a stream.
+|||
+||| @ s   The shape of the constructed array
+||| @ ord The order to interpret the elements
+export
+fromStream' : (s : Vect rk Nat) -> (ord : Order) -> Stream a -> Array s a
+fromStream' s ord st = MkArray ord (calcStrides ord s) s (fromList $ take (product s) st)
+
+||| Create an array by taking values from a stream.
+||| To specify the order of the array, use `fromStream'`.
+|||
+||| @ s The shape of the constructed array
+export
+fromStream : (s : Vect rk Nat) -> Stream a -> Array s a
+fromStream s = fromStream' s COrder
 
 ||| Create an array given a function to generate its elements.
 |||
@@ -292,7 +327,7 @@ Functor (Array s) where
 
 export
 {s : _} -> Applicative (Array s) where
-  pure = constant s
+  pure = repeat s
   (<*>) = zipWith apply
 
 export
@@ -328,7 +363,7 @@ Semigroup a => Semigroup (Array s a) where
 
 export
 {s : _} -> Monoid a => Monoid (Array s a) where
-  neutral = constant s neutral
+  neutral = repeat s neutral
 
 -- the shape must be known at runtime due to `fromInteger`. If `fromInteger`
 -- were moved into its own interface, this constraint could be removed.
@@ -338,7 +373,7 @@ export
   (+) = zipWith (+)
   (*) = zipWith (*)
 
-  fromInteger = constant s . fromInteger
+  fromInteger = repeat s . fromInteger
 
 
 export

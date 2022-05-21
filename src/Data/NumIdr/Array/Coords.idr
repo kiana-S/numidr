@@ -1,5 +1,6 @@
 module Data.NumIdr.Array.Coords
 
+import Data.Either
 import Data.Vect
 
 %default total
@@ -42,11 +43,6 @@ namespace Coords
       mapWithIndex' f (x::xs) = f Z x :: mapWithIndex' (f . S) xs
 
 
-  index : Coords s -> Vects s a -> a
-  index []      x = x
-  index (i::is) v = index is $ index i v
-
-
   export
   getLocation' : (sts : Vect rk Nat) -> (is : Vect rk Nat) -> Nat
   getLocation' = sum .: zipWith (*)
@@ -87,6 +83,10 @@ namespace CoordsRange
   newRank (r :: rs) = case cRangeToBounds r of
                         Left _ => newRank rs
                         Right _ => S (newRank rs)
+
+  export
+  newDim : {d : _} -> (r : CRange d) -> Maybe Nat
+  newDim = map (uncurry $ flip minus) . eitherToMaybe . cRangeToBounds
 
   ||| Calculate the new shape given by a coordinate range.
   export

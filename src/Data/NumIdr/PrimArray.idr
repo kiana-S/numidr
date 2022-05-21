@@ -30,6 +30,11 @@ arrayDataSet : Nat -> a -> ArrayData a -> IO ()
 arrayDataSet n x arr = fromPrim $ prim__arraySet arr (cast n) x
 
 
+||| Construct an array with a constant value.
+export
+constant : Nat -> a -> PrimArray a
+constant size x = MkPrimArray size $ unsafePerformIO $ newArrayData size x
+
 ||| Construct an array from a list of "instructions" to write a
 ||| value to a particular index.
 export
