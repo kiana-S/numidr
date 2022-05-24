@@ -64,12 +64,20 @@ namespace CoordsRange
     EndBound : Fin (S n) -> CRange n
     Bounds : Fin (S n) -> Fin (S n) -> CRange n
 
+  infix 0 ...
+
+  public export
+  (...) : Fin (S n) -> Fin (S n) -> CRange n
+  (...) = Bounds
+
+
   public export
   data CoordsRange : Vect rk Nat -> Type where
     Nil  : CoordsRange []
     (::) : CRange d -> CoordsRange s -> CoordsRange (d :: s)
 
 
+  public export
   cRangeToBounds : {n : Nat} -> CRange n -> Either Nat (Nat, Nat)
   cRangeToBounds (One x) = Left (cast x)
   cRangeToBounds All = Right (0, n)
@@ -78,18 +86,15 @@ namespace CoordsRange
   cRangeToBounds (Bounds x y) = Right (cast x, cast y)
 
 
+  public export
   newRank : {s : _} -> CoordsRange s -> Nat
   newRank [] = 0
   newRank (r :: rs) = case cRangeToBounds r of
                         Left _ => newRank rs
                         Right _ => S (newRank rs)
 
-  export
-  newDim : {d : _} -> (r : CRange d) -> Maybe Nat
-  newDim = map (uncurry $ flip minus) . eitherToMaybe . cRangeToBounds
-
   ||| Calculate the new shape given by a coordinate range.
-  export
+  public export
   newShape : {s : _} -> (rs : CoordsRange s) -> Vect (newRank rs) Nat
   newShape [] = []
   newShape (r :: rs) with (cRangeToBounds r)

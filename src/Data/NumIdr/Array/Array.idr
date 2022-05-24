@@ -201,11 +201,30 @@ array v = MkArray COrder (calcStrides COrder s) s (fromList $ collapse v)
 -- Indexing
 --------------------------------------------------------------------------------
 
+infix 2 !!
+infix 2 !?
+infixl 3 !!..
+infix 3 !?..
+
 
 ||| Index the array using the given `Coords` object.
 export
 index : Coords s -> Array s a -> a
 index is arr = index (getLocation (strides arr) is) (getPrim arr)
+
+export
+(!!) : Array s a -> Coords s -> a
+(!!) = flip index
+
+
+export
+indexMaybe : Vect rk Nat -> Array {rk} s a -> Maybe a
+indexMaybe is arr = safeIndex (getLocation' (strides arr) is) (getPrim arr)
+
+export
+(!?) : Array {rk} s a -> Vect rk Nat -> Maybe a
+(!?) = flip indexMaybe
+
 
 ||| Index the array using the given `CoordsRange` object.
 export
@@ -217,6 +236,10 @@ indexRange rs arr = let ord = getOrder arr
                     in  believe_me $ MkArray ord sts s (unsafeFromIns (product s) $
                                                           map (\(is,is') => (getLocation' sts is', index (getLocation' (strides arr) is) (getPrim arr))) $
                                                           getCoordsList {s = shape arr} $ rewrite sym $ shapeEq arr in rs)
+
+export
+(!!..) : Array s a -> (rs : CoordsRange s) -> Array (newShape rs) a
+arr !!.. rs = indexRange rs arr
 
 
 --------------------------------------------------------------------------------
