@@ -1,6 +1,7 @@
 module Data.NumIdr.Scalar
 
 import Data.Vect
+import Data.NumIdr.Multiply
 import Data.NumIdr.PrimArray
 import public Data.NumIdr.Array
 
@@ -21,3 +22,9 @@ scalar x = fromVect _ [x]
 export
 unwrap : Scalar a -> a
 unwrap = index 0 . getPrim
+
+
+export
+Num a => Mult (Scalar a) (Scalar a) where
+  Result = Scalar a
+  (*.) = (*)

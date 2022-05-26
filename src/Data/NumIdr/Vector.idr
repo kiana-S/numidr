@@ -1,6 +1,7 @@
 module Data.NumIdr.Vector
 
 import Data.Vect
+import Data.NumIdr.Multiply
 import public Data.NumIdr.Array
 
 %default total
@@ -46,6 +47,18 @@ export
 index : Fin n -> Vector n a -> a
 index n = Array.index [n]
 
+export
+(!!) : Vector n a -> Fin n -> a
+(!!) = flip index
+
+export
+indexMaybe : Nat -> Vector n a -> Maybe a
+indexMaybe n = Array.indexMaybe [n]
+
+export
+(!?) : Vector n a -> Nat -> Maybe a
+(!?) = flip indexMaybe
+
 
 -- Named projections
 export
@@ -78,6 +91,11 @@ swizzle p v = rewrite sym (lengthCorrect p)
 --------------------------------------------------------------------------------
 -- Vector operations
 --------------------------------------------------------------------------------
+
+
+export
+concat : Vector m a -> Vector n a -> Vector (m + n) a
+concat = stack 0
 
 
 export

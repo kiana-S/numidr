@@ -116,4 +116,4 @@ namespace CoordsRange
       go [] = pure []
       go (r :: rs) = [| (case cRangeToBounds r of
                            Left x => pure x
-                           Right (x,y) => [x..pred y]) :: go rs |]
+                           Right (x,y) => [x,S x..pred y]) :: go rs |]

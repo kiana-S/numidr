@@ -4,12 +4,17 @@ import Data.List
 import Data.List1
 import Data.Vect
 import Data.Zippable
+import Data.NumIdr.Multiply
 import Data.NumIdr.PrimArray
 import Data.NumIdr.Array.Order
 import Data.NumIdr.Array.Coords
 
 %default total
 
+infix 2 !!
+infix 2 !?
+infixl 3 !!..
+infix 3 !?..
 
 ||| Arrays are the central data structure of NumIdr. They are an `n`-dimensional
 ||| grid of values, where `n` is a value known as the *rank* of the array. Arrays
@@ -201,11 +206,6 @@ array v = MkArray COrder (calcStrides COrder s) s (fromList $ collapse v)
 -- Indexing
 --------------------------------------------------------------------------------
 
-infix 2 !!
-infix 2 !?
-infixl 3 !!..
-infix 3 !?..
-
 
 ||| Index the array using the given `Coords` object.
 export
@@ -290,7 +290,7 @@ enumerate arr = map (\is => (is, index is arr))
 
 export
 stack : (axis : Fin rk) -> Array {rk} s a -> Array (replaceAt axis d s) a ->
-        Array (replaceAt axis (index axis s + d) s) a
+        Array (updateAt axis (+d) s) a
 stack axis a b = let sA = shape a
                      sB = shape b
                      dA = index axis sA
@@ -375,6 +375,10 @@ Traversable (Array s) where
 
 
 export
+Cast a b => Cast (Array s a) (Array s b) where
+  cast = map cast
+
+export
 Eq a => Eq (Array s a) where
   a == b = if getOrder a == getOrder b
               then unsafeEq (getPrim a) (getPrim b)
@@ -397,6 +401,27 @@ export
   (*) = zipWith (*)
 
   fromInteger = repeat s . fromInteger
+
+export
+{s : _} -> Neg a => Neg (Array s a) where
+  negate = map negate
+  (-) = zipWith (-)
+
+{s : _} -> Fractional a => Fractional (Array s a) where
+  recip = map recip
+  (/) = zipWith (/)
+
+
+export
+Num a => Mult a (Array {rk} s a) where
+  Result = Array {rk} s a
+  (*.) x = map (*x)
+
+export
+Num a => Mult (Array {rk} s a) a where
+  Result = Array {rk} s a
+  (*.) = flip (*.)
+
 
 
 export
