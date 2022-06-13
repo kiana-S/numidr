@@ -289,18 +289,18 @@ enumerate arr = map (\is => (is, index is arr))
                     (rewrite shapeEq arr in getAllCoords $ shape arr)
 
 export
-stack : (axis : Fin rk) -> Array {rk} s a -> Array (replaceAt axis d s) a ->
+concat : (axis : Fin rk) -> Array {rk} s a -> Array (replaceAt axis d s) a ->
         Array (updateAt axis (+d) s) a
-stack axis a b = let sA = shape a
-                     sB = shape b
-                     dA = index axis sA
-                     dB = index axis sB
-                     s = replaceAt axis (dA + dB) sA
-                     sts = calcStrides COrder s
-                     ins = map (mapFst $ getLocation' sts . toNats) (enumerate a)
-                           ++ map (mapFst $ getLocation' sts . updateAt axis (+dA) . toNats) (enumerate b)
-                     -- TODO: prove that the type-level shape and `s` are equivalent
-                 in  believe_me $ MkArray COrder sts s (unsafeFromIns (product s) ins)
+concat axis a b = let sA = shape a
+                      sB = shape b
+                      dA = index axis sA
+                      dB = index axis sB
+                      s = replaceAt axis (dA + dB) sA
+                      sts = calcStrides COrder s
+                      ins = map (mapFst $ getLocation' sts . toNats) (enumerate a)
+                            ++ map (mapFst $ getLocation' sts . updateAt axis (+dA) . toNats) (enumerate b)
+                      -- TODO: prove that the type-level shape and `s` are equivalent
+                  in  believe_me $ MkArray COrder sts s (unsafeFromIns (product s) ins)
 
 
 

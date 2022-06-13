@@ -95,10 +95,10 @@ getColumn c mat = rewrite sym (minusZeroRight m) in indexRange [All, One c] mat
 --------------------------------------------------------------------------------
 
 export
-vstack : Matrix m n a -> Matrix m' n a -> Matrix (m + m') n a
-vstack = stack 0
+vconcat : Matrix m n a -> Matrix m' n a -> Matrix (m + m') n a
+vconcat = concat 0
 
 export
-hstack : Matrix m n a -> Matrix m n' a -> Matrix m (n + n') a
-hstack = stack 1
+hconcat : Matrix m n a -> Matrix m n' a -> Matrix m (n + n') a
+hconcat = concat 1
 

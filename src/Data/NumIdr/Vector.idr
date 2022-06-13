@@ -94,8 +94,8 @@ swizzle p v = rewrite sym (lengthCorrect p)
 
 
 export
-concat : Vector m a -> Vector n a -> Vector (m + n) a
-concat = stack 0
+(++) : Vector m a -> Vector n a -> Vector (m + n) a
+(++) = concat 0
 
 
 export
