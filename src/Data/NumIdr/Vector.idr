@@ -19,6 +19,10 @@ export
 dimEq : (v : Vector n a) -> n = dim v
 dimEq v = cong head $ shapeEq v
 
+export
+withDim : {0 n' : Nat} -> Vector n' a -> ((n : Nat) -> Vector n a -> b) -> b
+withDim v f = f (dim v) (rewrite sym (dimEq v) in v)
+
 --------------------------------------------------------------------------------
 -- Vector constructors
 --------------------------------------------------------------------------------
@@ -30,6 +34,11 @@ vector v = rewrite sym (lengthCorrect v)
            in fromVect [length v] $          -- the order doesn't matter here, as
            rewrite lengthCorrect v in        -- there is only 1 axis
            rewrite multOneLeftNeutral n in v
+
+export
+toVect : Vector n a -> Vect n a
+toVect v = believe_me $ Vect.fromList $ toList v
+
 
 export
 basis : Num a => {n : _} -> (i : Fin n) -> Vector n a

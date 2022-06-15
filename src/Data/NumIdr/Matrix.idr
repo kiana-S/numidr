@@ -17,6 +17,10 @@ Matrix' : Nat -> Type -> Type
 Matrix' n = Matrix n n
 
 
+export
+withDims : {0 m',n' : Nat} -> {0 b : Nat -> Nat -> Type} -> Matrix m' n' a -> ((m,n : Nat) -> Matrix m n a -> b m n) -> b m' n'
+withDims mat f = rewrite shapeEq mat in f (head $ shape mat) (index 1 $ shape mat) (rewrite sym (shapeEq mat) in mat)
+
 --------------------------------------------------------------------------------
 -- Matrix constructors
 --------------------------------------------------------------------------------

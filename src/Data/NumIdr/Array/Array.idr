@@ -87,6 +87,10 @@ export
 shapeEq : (arr : Array s a) -> s = shape arr
 shapeEq (MkArray _ _ _ _) = Refl
 
+export
+withShape : {0 s' : Vect rk Nat} -> Array s' a -> ((s : Vect rk Nat) -> Array s a -> b) -> b
+withShape arr f = f (shape arr) (rewrite sym (shapeEq arr) in arr)
+
 -- Get a list of all coordinates
 getAllCoords' : Vect rk Nat -> List (Vect rk Nat)
 getAllCoords' = traverse (\case Z => []; S n => [0..n])
