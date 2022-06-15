@@ -11,6 +11,14 @@ Vector : Nat -> Type -> Type
 Vector n = Array [n]
 
 
+public export
+dim : Vector n a -> Nat
+dim = head . shape
+
+export
+dimEq : (v : Vector n a) -> n = dim v
+dimEq v = cong head $ shapeEq v
+
 --------------------------------------------------------------------------------
 -- Vector constructors
 --------------------------------------------------------------------------------
@@ -106,4 +114,5 @@ dot = sum .: zipWith (*)
 export
 perp : Neg a => Vector 2 a -> Vector 2 a -> a
 perp a b = a.x * b.y - a.y * b.x
+
 

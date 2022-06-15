@@ -3,7 +3,7 @@ module Data.NumIdr.Multiply
 %default total
 
 
-infixr 7 *.
+infixr 9 *.
 
 ||| A generalized multiplication/transformation operator. This interface is
 ||| necessary since the standard multiplication operator is homogenous.
