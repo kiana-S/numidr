@@ -19,9 +19,6 @@ export
 dimEq : (v : Vector n a) -> n = dim v
 dimEq v = cong head $ shapeEq v
 
-export
-withDim : {0 n' : Nat} -> Vector n' a -> ((n : Nat) -> Vector n a -> b) -> b
-withDim v f = f (dim v) (rewrite sym (dimEq v) in v)
 
 --------------------------------------------------------------------------------
 -- Vector constructors
