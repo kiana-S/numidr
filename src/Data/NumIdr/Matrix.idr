@@ -105,7 +105,5 @@ hconcat = concat 1
 
 export
 kronecker : Num a => Vector m a -> Vector n a -> Matrix m n a
-kronecker a b = rewrite dimEq a in rewrite dimEq b in
-                fromFunction [dim a, dim b]
-                  (\[i,j] => Vector.index (rewrite dimEq a in i) a *
-                             Vector.index (rewrite dimEq b in j) b)
+kronecker a b with (viewShape a, viewShape b)
+  _ | (Shape [m], Shape [n]) = fromFunction [m,n] (\[i,j] => index i a * index j b)

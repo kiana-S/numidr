@@ -83,11 +83,6 @@ rank : Array s a -> Nat
 rank = length . shape
 
 
-export
-shapeEq : (arr : Array s a) -> s = shape arr
-shapeEq (MkArray _ _ _ _) = Refl
-
-
 -- Get a list of all coordinates
 getAllCoords' : Vect rk Nat -> List (Vect rk Nat)
 getAllCoords' = traverse (\case Z => []; S n => [0..n])
@@ -103,11 +98,16 @@ getAllCoords (S d :: s) = [| forget (allFins d) :: getAllCoords s |]
 --------------------------------------------------------------------------------
 
 
+export
+shapeEq : (arr : Array s a) -> s = shape arr
+shapeEq (MkArray _ _ _ _) = Refl
+
+
 public export
 data ShapeView : Array s a -> Type where
   Shape : (s : Vect rk Nat) -> {0 arr : Array s a} -> ShapeView arr
 
-public export
+export
 viewShape : (arr : Array s a) -> ShapeView arr
 viewShape arr = rewrite shapeEq arr in
                   Shape (shape arr)
@@ -233,14 +233,35 @@ export
 (!!) : Array s a -> Coords s -> a
 (!!) = flip index
 
+-- TODO: Create set/update at index functions
+
+export
+indexUpdate : Coords s -> (a -> a) -> Array s a -> Array s a
+indexUpdate is f (MkArray ord sts s arr) = MkArray ord sts s (updateAt (getLocation sts is) f arr)
+
+export
+indexSet : Coords s -> a -> Array s a -> Array s a
+indexSet is = indexUpdate is . const
+
 
 export
 indexMaybe : Vect rk Nat -> Array {rk} s a -> Maybe a
-indexMaybe is arr = safeIndex (getLocation' (strides arr) is) (getPrim arr)
+indexMaybe is arr with (viewShape arr)
+  _ | Shape s = if concat @{All} $ zipWith (<) s (shape arr)
+                then Just $ index (getLocation' (strides arr) is) (getPrim arr)
+                else Nothing
 
 export
 (!?) : Array {rk} s a -> Vect rk Nat -> Maybe a
 (!?) = flip indexMaybe
+
+export
+indexUpdateMaybe : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
+indexUpdateMaybe is f (MkArray ord sts s arr) = MkArray ord sts s (updateAt (getLocation' sts is) f arr)
+
+export
+indexSetMaybe : Vect rk Nat -> a -> Array {rk} s a -> Array s a
+indexSetMaybe is = indexUpdateMaybe is . const
 
 
 ||| Index the array using the given `CoordsRange` object.
@@ -296,6 +317,10 @@ reorder ord' arr with (viewShape arr)
                       map (\is => (getLocation' sts is, index (getLocation' (strides arr) is) (getPrim arr))) $
                       getAllCoords' s)
 
+
+export
+resize : (s' : Vect rk Nat) -> a -> Array {rk} s a -> Array s' a
+resize s' x arr = fromFunction' s' (getOrder arr) (fromMaybe x . (arr !?) . toNats)
 
 export
 enumerate' : Array {rk} s a -> List (Vect rk Nat, a)

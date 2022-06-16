@@ -59,7 +59,6 @@ create size f = unsafePerformIO $ do
         = do arrayDataSet loc (f loc) arr
              addToArray (S loc) n arr
 
-
 ||| Index into a primitive array. This function is unsafe, as it
 ||| performs no boundary check on the index given.
 export
@@ -73,6 +72,18 @@ safeIndex n arr = if n < length arr
                 then Just $ index n arr
                 else Nothing
 
+export
+copy : PrimArray a -> PrimArray a
+copy arr = create (length arr) (\n => index n arr)
+
+export
+updateAt : Nat -> (a -> a) -> PrimArray a -> PrimArray a
+updateAt n f arr = if n >= length arr then arr else
+  unsafePerformIO $ do
+    let cpy = copy arr
+    x <- arrayDataGet n cpy.content
+    arrayDataSet n (f x) cpy.content
+    pure cpy
 
 ||| Convert a primitive array to a list.
 export
