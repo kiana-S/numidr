@@ -2,6 +2,7 @@ module Data.NumIdr.Array.Coords
 
 import Data.Either
 import Data.Vect
+import public Data.NP
 
 %default total
 
@@ -11,9 +12,8 @@ namespace Coords
   ||| A type-safe coordinate system for an array. The coordinates are
   ||| values of `Fin dim`, where `dim` is the dimension of each axis.
   public export
-  data Coords : (s : Vect rk Nat) -> Type where
-    Nil  : Coords Nil
-    (::) : Fin dim -> Coords s -> Coords (dim :: s)
+  Coords : (s : Vect rk Nat) -> Type
+  Coords = NP Fin
 
   ||| Forget the shape of the array by converting each index to type `Nat`.
   export
@@ -29,7 +29,7 @@ namespace Coords
 
   export
   collapse : {s : _} -> Vects s a -> List a
-  collapse {s=[]} = (::[])
+  collapse {s=[]} = pure
   collapse {s=_::_} = concat . map collapse
 
 
@@ -72,10 +72,8 @@ namespace CoordsRange
 
 
   public export
-  data CoordsRange : Vect rk Nat -> Type where
-    Nil  : CoordsRange []
-    (::) : CRange d -> CoordsRange s -> CoordsRange (d :: s)
-
+  CoordsRange : (s : Vect rk Nat) -> Type
+  CoordsRange = NP CRange
 
   public export
   cRangeToBounds : {n : Nat} -> CRange n -> Either Nat (Nat, Nat)
