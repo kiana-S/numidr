@@ -66,12 +66,12 @@ export
 (!!) = flip index
 
 export
-indexMaybe : Nat -> Vector n a -> Maybe a
-indexMaybe n = Array.indexMaybe [n]
+indexNB : Nat -> Vector n a -> Maybe a
+indexNB n = Array.indexNB [n]
 
 export
 (!?) : Vector n a -> Nat -> Maybe a
-(!?) = flip indexMaybe
+(!?) = flip indexNB
 
 
 -- Named projections

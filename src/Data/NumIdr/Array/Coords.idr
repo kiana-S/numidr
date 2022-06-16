@@ -17,9 +17,9 @@ namespace Coords
 
   ||| Forget the shape of the array by converting each index to type `Nat`.
   export
-  toNats : Coords {rk} s -> Vect rk Nat
-  toNats [] = []
-  toNats (i :: is) = finToNat i :: toNats is
+  toNB : Coords {rk} s -> Vect rk Nat
+  toNB [] = []
+  toNB (i :: is) = finToNat i :: toNB is
 
 
   public export
@@ -51,7 +51,7 @@ namespace Coords
   ||| given its coordinate and the strides of the array.
   export
   getLocation : Vect rk Nat -> Coords {rk} s -> Nat
-  getLocation sts is = getLocation' sts (toNats is)
+  getLocation sts is = getLocation' sts (toNB is)
 
 
 namespace CoordsRange

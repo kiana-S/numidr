@@ -77,8 +77,8 @@ index : Fin m -> Fin n -> Matrix m n a -> a
 index m n = index [m,n]
 
 export
-indexMaybe : Nat -> Nat -> Matrix m n a -> Maybe a
-indexMaybe m n = indexMaybe [m,n]
+indexNB : Nat -> Nat -> Matrix m n a -> Maybe a
+indexNB m n = indexNB [m,n]
 
 
 export

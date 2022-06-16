@@ -245,23 +245,23 @@ indexSet is = indexUpdate is . const
 
 
 export
-indexMaybe : Vect rk Nat -> Array {rk} s a -> Maybe a
-indexMaybe is arr with (viewShape arr)
+indexNB : Vect rk Nat -> Array {rk} s a -> Maybe a
+indexNB is arr with (viewShape arr)
   _ | Shape s = if concat @{All} $ zipWith (<) s (shape arr)
                 then Just $ index (getLocation' (strides arr) is) (getPrim arr)
                 else Nothing
 
 export
 (!?) : Array {rk} s a -> Vect rk Nat -> Maybe a
-(!?) = flip indexMaybe
+(!?) = flip indexNB
 
 export
-indexUpdateMaybe : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
-indexUpdateMaybe is f (MkArray ord sts s arr) = MkArray ord sts s (updateAt (getLocation' sts is) f arr)
+indexUpdateNB : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
+indexUpdateNB is f (MkArray ord sts s arr) = MkArray ord sts s (updateAt (getLocation' sts is) f arr)
 
 export
-indexSetMaybe : Vect rk Nat -> a -> Array {rk} s a -> Array s a
-indexSetMaybe is = indexUpdateMaybe is . const
+indexSetNB : Vect rk Nat -> a -> Array {rk} s a -> Array s a
+indexSetNB is = indexUpdateNB is . const
 
 
 ||| Index the array using the given `CoordsRange` object.
@@ -320,7 +320,7 @@ reorder ord' arr with (viewShape arr)
 
 export
 resize : (s' : Vect rk Nat) -> a -> Array {rk} s a -> Array s' a
-resize s' x arr = fromFunction' s' (getOrder arr) (fromMaybe x . (arr !?) . toNats)
+resize s' x arr = fromFunction' s' (getOrder arr) (fromMaybe x . (arr !?) . toNB)
 
 export
 enumerate' : Array {rk} s a -> List (Vect rk Nat, a)
@@ -342,8 +342,8 @@ concat axis a b = let sA = shape a
                       dB = index axis sB
                       s = replaceAt axis (dA + dB) sA
                       sts = calcStrides COrder s
-                      ins = map (mapFst $ getLocation' sts . toNats) (enumerate a)
-                            ++ map (mapFst $ getLocation' sts . updateAt axis (+dA) . toNats) (enumerate b)
+                      ins = map (mapFst $ getLocation' sts . toNB) (enumerate a)
+                            ++ map (mapFst $ getLocation' sts . updateAt axis (+dA) . toNB) (enumerate b)
                       -- TODO: prove that the type-level shape and `s` are equivalent
                   in  believe_me $ MkArray COrder sts s (unsafeFromIns (product s) ins)
 
