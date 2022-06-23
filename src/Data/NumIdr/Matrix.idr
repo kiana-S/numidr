@@ -107,3 +107,27 @@ export
 kronecker : Num a => Vector m a -> Vector n a -> Matrix m n a
 kronecker a b with (viewShape a, viewShape b)
   _ | (Shape [m], Shape [n]) = fromFunction [m,n] (\[i,j] => index i a * index j b)
+
+
+--------------------------------------------------------------------------------
+-- Matrix multiplication
+--------------------------------------------------------------------------------
+
+
+export
+Num a => Mult (Matrix m n a) (Vector n a) (Vector m a) where
+  mat *. v with (viewShape mat)
+    _ | Shape [m,n] = fromFunction [m]
+      (\[i] => foldMap @{%search} @{Additive}
+        (\j => mat !! [i,j] * v !! j) range)
+
+export
+Num a => Mult (Matrix m n a) (Matrix n p a) (Matrix m p a) where
+  m1 *. m2 with (viewShape m1, viewShape m2)
+    _ | (Shape [m,n], Shape [n,p]) = fromFunction [m,p]
+      (\[i,j] => foldMap @{%search} @{Additive}
+        (\k => m1 !! [i,k] * m2 !! [k,j]) range)
+
+export
+{n : _} -> Num a => MultNeutral (Matrix' n a) where
+  neutral = identity

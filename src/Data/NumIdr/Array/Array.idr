@@ -237,7 +237,8 @@ export
 
 export
 indexUpdate : Coords s -> (a -> a) -> Array s a -> Array s a
-indexUpdate is f (MkArray ord sts s arr) = MkArray ord sts s (updateAt (getLocation sts is) f arr)
+indexUpdate is f (MkArray ord sts s arr) =
+  MkArray ord sts s (updateAt (getLocation sts is) f arr)
 
 export
 indexSet : Coords s -> a -> Array s a -> Array s a
@@ -247,7 +248,7 @@ indexSet is = indexUpdate is . const
 export
 indexNB : Vect rk Nat -> Array {rk} s a -> Maybe a
 indexNB is arr with (viewShape arr)
-  _ | Shape s = if concat @{All} $ zipWith (<) s (shape arr)
+  _ | Shape s = if concat @{All} $ zipWith (<) is s
                 then Just $ index (getLocation' (strides arr) is) (getPrim arr)
                 else Nothing
 
@@ -257,7 +258,8 @@ export
 
 export
 indexUpdateNB : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
-indexUpdateNB is f (MkArray ord sts s arr) = MkArray ord sts s (updateAt (getLocation' sts is) f arr)
+indexUpdateNB is f (MkArray ord sts s arr) =
+  MkArray ord sts s (updateAt (getLocation' sts is) f arr)
 
 export
 indexSetNB : Vect rk Nat -> a -> Array {rk} s a -> Array s a
@@ -323,8 +325,16 @@ resize : (s' : Vect rk Nat) -> a -> Array {rk} s a -> Array s' a
 resize s' x arr = fromFunction' s' (getOrder arr) (fromMaybe x . (arr !?) . toNB)
 
 export
-enumerate' : Array {rk} s a -> List (Vect rk Nat, a)
-enumerate' (MkArray _ sts sh p) =
+-- TODO: Come up with a solution that doesn't use `believe_me` or trip over some
+-- weird bug in the type-checker
+resizeLTE : (s' : Vect rk Nat) -> (0 ok : NP Prelude.id (zipWith LTE s' s)) =>
+            Array {rk} s a -> Array s' a
+resizeLTE s' arr = resize s' (believe_me ()) arr
+
+
+export
+enumerateNB : Array {rk} s a -> List (Vect rk Nat, a)
+enumerateNB (MkArray _ sts sh p) =
   map (\is => (is, index (getLocation' sts is) p)) (getAllCoords' sh)
 
 
