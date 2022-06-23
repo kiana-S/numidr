@@ -54,12 +54,12 @@ fromDiag ds o = fromFunction [m,n] (\[i,j] => maybe o (`index` ds) $ i `eq` j)
 
 
 export
-identity : Num a => {n : _} -> Matrix n n a
+identity : Num a => {n : _} -> Matrix' n a
 identity = repeatDiag 1 0
 
 
 export
-scaling : Num a => {n : _} -> a -> Matrix n n a
+scaling : Num a => {n : _} -> a -> Matrix' n a
 scaling x = repeatDiag x 0
 
 export

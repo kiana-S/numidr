@@ -56,6 +56,8 @@ unit3D pol az = vector [cos az * sin pol, sin az * sin pol, cos pol]
 -- Indexing
 --------------------------------------------------------------------------------
 
+infix 10 !!
+infix 10 !?
 
 export
 index : Fin n -> Vector n a -> a

@@ -11,10 +11,6 @@ import Data.NumIdr.Array.Coords
 
 %default total
 
-infix 2 !!
-infix 2 !?
-infixl 3 !!..
-infix 3 !?..
 
 ||| Arrays are the central data structure of NumIdr. They are an `n`-dimensional
 ||| grid of values, where `n` is a value known as the *rank* of the array. Arrays
@@ -223,6 +219,10 @@ array v = MkArray COrder (calcStrides COrder s) s (fromList $ collapse v)
 -- Indexing
 --------------------------------------------------------------------------------
 
+infix 10 !!
+infix 10 !?
+infixl 11 !!..
+infix 11 !?..
 
 ||| Index the array using the given `Coords` object.
 export
@@ -462,13 +462,11 @@ export
 
 
 export
-Num a => Mult a (Array {rk} s a) where
-  Result = Array {rk} s a
+Num a => Mult a (Array {rk} s a) (Array s a) where
   (*.) x = map (*x)
 
 export
-Num a => Mult (Array {rk} s a) a where
-  Result = Array {rk} s a
+Num a => Mult (Array {rk} s a) a (Array s a) where
   (*.) = flip (*.)
 
 
