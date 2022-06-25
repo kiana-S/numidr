@@ -27,6 +27,5 @@ unwrap = index 0 . getPrim
 
 
 export
-Num a => Mult (Scalar a) (Scalar a) where
-  Result = Scalar a
+Num a => Mult (Scalar a) (Scalar a) (Scalar a) where
   (*.) = (*)
