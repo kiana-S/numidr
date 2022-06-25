@@ -1,7 +1,22 @@
 package numidr
-version = 0.0.0
+version = 0.1.0
 
-authors = "kiana-S"
+authors = "Kiana Sheibani"
 license = "MIT"
 
+langversion >= 0.4.0
+
 sourcedir = "src"
+readme = "README.md"
+
+modules = Data.NP,
+          Data.NumIdr.Array,
+          Data.NumIdr.Array.Array,
+          Data.NumIdr.Array.Coords,
+          Data.NumIdr.Array.Order,
+          Data.NumIdr.Homogeneous,
+          Data.NumIdr.Matrix,
+          Data.NumIdr.Multiply,
+          Data.NumIdr.PrimArray,
+          Data.NumIdr.Scalar,
+          Data.NumIdr.Vector
