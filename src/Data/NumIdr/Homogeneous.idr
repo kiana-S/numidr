@@ -8,14 +8,33 @@ import Data.NumIdr.Matrix
 %default total
 
 
-public export
-HVector : Nat -> Type -> Type
-HVector n = Vector (S n)
 
+||| A homogeneous matrix type.
+|||
+||| Homogeneous matrices are matrices that encode an affine transformation, as
+||| opposed to the more restriced linear transformations of normal matrices.
+||| Their multiplication is identical to regular matrix multiplication, but the
+||| extra dimension in each axis allows the homogeneous matrix to store a
+||| translation vector that is applied during multiplication.
+|||
+||| ```hmatrix mat tr *. v == mat *. v + tr```
 public export
 HMatrix : Nat -> Nat -> Type -> Type
 HMatrix m n = Matrix (S m) (S n)
 
+||| A synonym for a square homogeneous matrix.
+public export
+HMatrix' : Nat -> Type -> Type
+HMatrix' n = HMatrix n n
+
+||| An `n`-dimensional homogeneous vector type.
+|||
+||| Homogeneous vectors are vectors intended to be multiplied with homogeneous
+||| matrices (see `HMatrix`). They have an extra dimension compared to regular
+||| vectors.
+public export
+HVector : Nat -> Type -> Type
+HVector n = Vector (S n)
 
 
 export

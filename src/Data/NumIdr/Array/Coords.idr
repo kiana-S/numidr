@@ -2,7 +2,7 @@ module Data.NumIdr.Array.Coords
 
 import Data.Either
 import Data.Vect
-import public Data.NP
+import Data.NP
 
 %default total
 

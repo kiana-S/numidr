@@ -15,10 +15,12 @@ Scalar : Type -> Type
 Scalar = Array []
 
 
+||| Convert a value to a scalar.
 export
 scalar : a -> Scalar a
 scalar x = fromVect _ [x]
 
+||| Unwrap the single value from a scalar.
 export
 unwrap : Scalar a -> a
 unwrap = index 0 . getPrim

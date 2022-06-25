@@ -4,6 +4,7 @@ import Data.List
 import Data.List1
 import Data.Vect
 import Data.Zippable
+import Data.NP
 import Data.NumIdr.Multiply
 import Data.NumIdr.PrimArray
 import Data.NumIdr.Array.Order
@@ -63,6 +64,7 @@ strides : Array {rk} s a -> Vect rk Nat
 strides (MkArray _ sts _ _) = sts
 
 ||| The total number of elements of the array
+|||
 ||| This is equivalent to `product s`.
 export
 size : Array s a -> Nat
@@ -175,6 +177,26 @@ export
 fromStream : (s : Vect rk Nat) -> Stream a -> Array s a
 fromStream s = fromStream' s COrder
 
+
+||| Create an array given a function to generate its elements.
+|||
+||| @ s   The shape of the constructed array
+||| @ ord The order to interpret the elements
+export
+fromFunctionNB' : (s : Vect rk Nat) -> (ord : Order) -> (Vect rk Nat -> a) -> Array s a
+fromFunctionNB' s ord f = let sts = calcStrides ord s
+                          in  MkArray ord sts s (unsafeFromIns (product s) $
+                                      map (\is => (getLocation' sts is, f is)) $ getAllCoords' s)
+
+||| Create an array given a function to generate its elements.
+||| To specify the order of the array, use `fromFunctionNB'`.
+|||
+||| @ s   The shape of the constructed array
+||| @ ord The order to interpret the elements
+export
+fromFunctionNB : (s : Vect rk Nat) -> (Vect rk Nat -> a) -> Array s a
+fromFunctionNB s = fromFunctionNB' s COrder
+
 ||| Create an array given a function to generate its elements.
 |||
 ||| @ s   The shape of the constructed array
@@ -219,32 +241,39 @@ array v = MkArray COrder (calcStrides COrder s) s (fromList $ collapse v)
 -- Indexing
 --------------------------------------------------------------------------------
 
-infix 10 !!
-infix 10 !?
+infixl 10 !!
+infixl 10 !?
 infixl 11 !!..
-infix 11 !?..
+infixl 11 !?..
 
-||| Index the array using the given `Coords` object.
+||| Index the array using the given coordinates.
 export
 index : Coords s -> Array s a -> a
 index is arr = index (getLocation (strides arr) is) (getPrim arr)
 
+||| Index the array using the given coordinates.
+|||
+||| This is the operator form of `index`.
 export
 (!!) : Array s a -> Coords s -> a
 (!!) = flip index
 
 -- TODO: Create set/update at index functions
 
+||| Update the value at the given coordinates using the function.
 export
 indexUpdate : Coords s -> (a -> a) -> Array s a -> Array s a
 indexUpdate is f (MkArray ord sts s arr) =
   MkArray ord sts s (updateAt (getLocation sts is) f arr)
 
+||| Set the value at the given coordinates to the given value.
 export
 indexSet : Coords s -> a -> Array s a -> Array s a
 indexSet is = indexUpdate is . const
 
 
+||| Index the array using the given coordinates, returning `Nothing` if the
+||| coordinates are out of bounds.
 export
 indexNB : Vect rk Nat -> Array {rk} s a -> Maybe a
 indexNB is arr with (viewShape arr)
@@ -252,21 +281,29 @@ indexNB is arr with (viewShape arr)
                 then Just $ index (getLocation' (strides arr) is) (getPrim arr)
                 else Nothing
 
+||| Index the array using the given coordinates, returning `Nothing` if the
+||| coordinates are out of bounds.
+|||
+||| This is the operator form of `indexNB`.
 export
 (!?) : Array {rk} s a -> Vect rk Nat -> Maybe a
 (!?) = flip indexNB
 
+||| Update the value at the given coordinates using the function. The array is
+||| returned unchanged if the coordinate is out of bounds.
 export
 indexUpdateNB : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
 indexUpdateNB is f (MkArray ord sts s arr) =
   MkArray ord sts s (updateAt (getLocation' sts is) f arr)
 
+||| Set the value at the given coordinates to the given value. The array is
+||| returned unchanged if the coordinate is out of bounds.
 export
 indexSetNB : Vect rk Nat -> a -> Array {rk} s a -> Array s a
 indexSetNB is = indexUpdateNB is . const
 
 
-||| Index the array using the given `CoordsRange` object.
+||| Index the array using the given range of coordinates, returning a new array.
 export
 indexRange : (rs : CoordsRange s) -> Array s a -> Array (newShape rs) a
 indexRange rs arr with (viewShape arr)
@@ -281,6 +318,9 @@ indexRange rs arr with (viewShape arr)
   where s' : Vect ? Nat
         s' = newShape rs
 
+||| Index the array using the given range of coordinates, returning a new array.
+|||
+||| This is the operator form of `indexRange`.
 export
 (!!..) : Array s a -> (rs : CoordsRange s) -> Array (newShape rs) a
 arr !!.. rs = indexRange rs arr
@@ -320,10 +360,20 @@ reorder ord' arr with (viewShape arr)
                       getAllCoords' s)
 
 
+||| Resize the array to a new shape, preserving the coordinates of the original
+||| elements. New coordinates are filled with a default value.
+|||
+||| @ s'  The shape to resize the array to
+||| @ def The default value to fill the array with
 export
-resize : (s' : Vect rk Nat) -> a -> Array {rk} s a -> Array s' a
-resize s' x arr = fromFunction' s' (getOrder arr) (fromMaybe x . (arr !?) . toNB)
+resize : (s' : Vect rk Nat) -> (def : a) -> Array {rk} s a -> Array s' a
+resize s' def arr = fromFunction' s' (getOrder arr) (fromMaybe def . (arr !?) . toNB)
 
+||| Resize the array to a new shape, preserving the coordinates of the original
+||| elements. This function requires a proof that the new shape is strictly
+||| smaller than the current shape of the array.
+|||
+||| @ s' The shape to resize the array to
 export
 -- TODO: Come up with a solution that doesn't use `believe_me` or trip over some
 -- weird bug in the type-checker
@@ -332,20 +382,26 @@ resizeLTE : (s' : Vect rk Nat) -> (0 ok : NP Prelude.id (zipWith LTE s' s)) =>
 resizeLTE s' arr = resize s' (believe_me ()) arr
 
 
+||| List all of the values in an array along with their coordinates.
 export
 enumerateNB : Array {rk} s a -> List (Vect rk Nat, a)
 enumerateNB (MkArray _ sts sh p) =
   map (\is => (is, index (getLocation' sts is) p)) (getAllCoords' sh)
 
-
+||| List all of the values in an array along with their coordinates.
 export
-enumerate : Array {rk} s a -> List (Coords s, a)
+enumerate : Array s a -> List (Coords s, a)
 enumerate arr with (viewShape arr)
   _ | Shape s = map (\is => (is, index is arr)) (getAllCoords s)
 
+
+||| Join two arrays along a particular axis, e.g. combining two matrices
+||| vertically or horizontally. The arrays must have the same shape on all other axes.
+|||
+||| @ axis The axis to join the arrays on
 export
 concat : (axis : Fin rk) -> Array {rk} s a -> Array (replaceAt axis d s) a ->
-        Array (updateAt axis (+d) s) a
+          Array (updateAt axis (+d) s) a
 concat axis a b = let sA = shape a
                       sB = shape b
                       dA = index axis sA
@@ -357,6 +413,9 @@ concat axis a b = let sA = shape a
                       -- TODO: prove that the type-level shape and `s` are equivalent
                   in  believe_me $ MkArray COrder sts s (unsafeFromIns (product s) ins)
 
+||| Stack multiple arrays along a new axis, e.g. stacking vectors to form a matrix.
+|||
+||| @ axis The axis to stack the arrays along
 export
 stack : {s : _} -> (axis : Fin (S rk)) -> Vect n (Array {rk} s a) -> Array (insertAt axis n s) a
 stack axis arrs = rewrite sym (lengthCorrect arrs) in
@@ -415,7 +474,7 @@ export
 
 export
 {s : _} -> Monad (Array s) where
-  join arr = fromFunction s (\is => index is $ index is arr)
+  join arr = fromFunction s (\is => arr !! is !! is)
 
 
 -- Foldable and Traversable operate on the primitive array directly. This means
@@ -466,6 +525,7 @@ export
   negate = map negate
   (-) = zipWith (-)
 
+export
 {s : _} -> Fractional a => Fractional (Array s a) where
   recip = map recip
   (/) = zipWith (/)
@@ -508,23 +568,30 @@ Show a => Show (Array s a) where
 --------------------------------------------------------------------------------
 
 
+||| Linearly interpolate between two arrays.
 export
 lerp : Neg a => a -> Array s a -> Array s a -> Array s a
 lerp t a b = zipWith (+) (a *. (1 - t)) (b *. t)
 
 
+||| Calculate the square of an array's Eulidean norm.
 export
 normSq : Num a => Array s a -> a
 normSq arr = sum $ zipWith (*) arr arr
 
+||| Calculate an array's Eucliean norm.
 export
 norm : Array s Double -> Double
 norm = sqrt . normSq
 
+||| Normalize the array to a norm of 1.
+|||
+||| If the array contains all zeros, then it is returned unchanged.
 export
 normalize : Array s Double -> Array s Double
 normalize arr = if all (==0) arr then arr else map (/ norm arr) arr
 
+||| Calculate the Lp-norm of an array.
 export
 pnorm : (p : Double) -> Array s Double -> Double
 pnorm p = (`pow` recip p) . sum . map (`pow` p)

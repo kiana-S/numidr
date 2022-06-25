@@ -35,8 +35,8 @@ export
 constant : Nat -> a -> PrimArray a
 constant size x = MkPrimArray size $ unsafePerformIO $ newArrayData size x
 
-||| Construct an array from a list of "instructions" to write a
-||| value to a particular index.
+||| Construct an array from a list of "instructions" to write a value to a
+||| particular index.
 export
 unsafeFromIns : Nat -> List (Nat, a) -> PrimArray a
 unsafeFromIns size ins = unsafePerformIO $ do
@@ -44,8 +44,8 @@ unsafeFromIns size ins = unsafePerformIO $ do
     for_ ins $ \(i,x) => arrayDataSet i x arr
     pure $ MkPrimArray size arr
 
-||| Create an array given its size and a function to generate
-||| its elements by its index.
+||| Create an array given its size and a function to generate its elements by
+||| its index.
 export
 create : Nat -> (Nat -> a) -> PrimArray a
 create size f = unsafePerformIO $ do
@@ -59,8 +59,8 @@ create size f = unsafePerformIO $ do
         = do arrayDataSet loc (f loc) arr
              addToArray (S loc) n arr
 
-||| Index into a primitive array. This function is unsafe, as it
-||| performs no boundary check on the index given.
+||| Index into a primitive array. This function is unsafe, as it performs no 
+||| boundary check on the index given.
 export
 index : Nat -> PrimArray a -> a
 index n arr = unsafePerformIO $ arrayDataGet n $ content arr
@@ -156,8 +156,8 @@ traverse : Applicative f => (a -> f b) -> PrimArray a -> f (PrimArray b)
 traverse f = map fromList . traverse f . toList
 
 
-||| Compares two primitive arrays for equal elements. This function assumes
-||| the arrays same the same length; it must not be used in any other case.
+||| Compares two primitive arrays for equal elements. This function assumes the
+||| arrays have the same length; it must not be used in any other case.
 export
 unsafeEq : Eq a => PrimArray a -> PrimArray a -> Bool
 unsafeEq a b = unsafePerformIO $
