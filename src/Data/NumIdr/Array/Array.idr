@@ -326,6 +326,15 @@ export
 arr !!.. rs = indexRange rs arr
 
 
+export
+indexUnsafe : Vect rk Nat -> Array {rk} s a -> a
+indexUnsafe is arr = index (getLocation' (strides arr) is) (getPrim arr)
+
+export
+(!#) : Array {rk} s a -> Vect rk Nat -> a
+(!#) = flip indexUnsafe
+
+
 --------------------------------------------------------------------------------
 -- Operations on arrays
 --------------------------------------------------------------------------------
@@ -338,7 +347,7 @@ arr !!.. rs = indexRange rs arr
 ||| @ ord The order to reinterpret the array by
 export
 reshape' : (s' : Vect rk' Nat) -> (ord : Order) -> Array {rk} s a ->
-             product s = product s' => Array s' a
+             (0 ok : product s = product s') => Array s' a
 reshape' s' ord' arr = MkArray ord' (calcStrides ord' s') s' (getPrim arr)
 
 ||| Reshape the array into the given shape.
@@ -346,7 +355,7 @@ reshape' s' ord' arr = MkArray ord' (calcStrides ord' s') s' (getPrim arr)
 ||| @ s' The shape to convert the array to
 export
 reshape : (s' : Vect rk' Nat) -> Array {rk} s a ->
-            product s = product s' => Array s' a
+            (0 ok : product s = product s') => Array s' a
 reshape s' arr = reshape' s' (getOrder arr) arr
 
 

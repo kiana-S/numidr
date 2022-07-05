@@ -37,31 +37,75 @@ HVector : Nat -> Type -> Type
 HVector n = Vector (S n)
 
 
-export
-fromVector : Num a => Vector n a -> HVector n a
-fromVector v = rewrite plusCommutative 1 n in v ++ vector [1]
-
-export
-fromVectorL : Num a => Vector n a -> HVector n a
-fromVectorL v = rewrite plusCommutative 1 n in v ++ vector [0]
-
-export
-toVector : HVector n a -> Vector n a
-toVector = vector . init . toVect
--- TODO: Find an implementation for `toVector` that doesn't suck
-
-
+--------------------------------------------------------------------------------
+-- Conversion functions
+--------------------------------------------------------------------------------
 
 
 export
-toHomogeneous : Num a => Matrix m n a -> HMatrix m n a
-toHomogeneous mat with (viewShape mat)
-  _ | Shape [m,n] = indexSet [last, last] 1 $ resize [S m, S n] 0 mat
+vectorToH : Num a => Vector n a -> HVector n a
+vectorToH v = rewrite plusCommutative 1 n in v ++ vector [1]
+
+export
+vectorToHLinear : Num a => Vector n a -> HVector n a
+vectorToHLinear v = rewrite plusCommutative 1 n in v ++ vector [0]
+
+export
+hvector : Num a => Vect n a -> HVector n a
+hvector v = rewrite plusCommutative 1 n in vector (v ++ [1])
+
+export
+hvectorLinear : Num a => Vect n a -> HVector n a
+hvectorLinear v = rewrite plusCommutative 1 n in vector (v ++ [0])
+
+
+export
+fromHomogeneous : HVector n a -> Vector n a
+fromHomogeneous = vector . init . toVect
+-- TODO: Find an implementation for `fromHomogeneous` that doesn't suck
+
+
+export
+hmatrix : Num a => Matrix m n a -> Vector m a -> HMatrix m n a
+hmatrix mat tr with (viewShape mat)
+  _ | Shape [m,n] = indexSet [last,last] 1 $
+                    resize [S m, S n] 0 $
+                    mat `hconcat` reshape
+                      {ok = sym $ multOneRightNeutral _} [m,1] tr
+
+export
+matrixToH : Num a => Matrix m n a -> HMatrix m n a
+matrixToH mat with (viewShape mat)
+  _ | Shape [m,n] = indexSet [last,last] 1 $ resize [S m, S n] 0 mat
 
 
 
 export
-toMatrix : HMatrix m n a -> Matrix m n a
-toMatrix mat with (viewShape mat)
+getMatrix : HMatrix m n a -> Matrix m n a
+getMatrix mat with (viewShape mat)
   _ | Shape [S m, S n] = resizeLTE [m,n] mat
                           {ok = [lteSuccRight reflexive,lteSuccRight reflexive]}
+
+export
+getTranslationVector : HMatrix m n a -> Vector m a
+getTranslationVector mat with (viewShape mat)
+  _ | Shape [S m, S n] = resizeLTE [m] {ok = [lteSuccRight reflexive]} $
+                          getColumn last mat
+
+
+--------------------------------------------------------------------------------
+-- Constructors of homogeneous matrices
+--------------------------------------------------------------------------------
+
+
+export
+scalingH : Num a => {n : _} -> a -> HMatrix' n a
+scalingH x = indexSet [last,last] 1 $ repeatDiag x 0
+
+export
+translationH : Num a => {n : _} -> Vector n a -> HMatrix' n a
+translationH = hmatrix identity
+
+export
+rotation2DH : Double -> HMatrix' 2 Double
+rotation2DH = matrixToH . rotation2D

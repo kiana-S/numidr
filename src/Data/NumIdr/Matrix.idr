@@ -65,7 +65,7 @@ identity : Num a => {n : _} -> Matrix' n a
 identity = repeatDiag 1 0
 
 
-||| Calculate the matrix that scales a vector by the given value.
+||| Construct the matrix that scales a vector by the given value.
 export
 scaling : Num a => {n : _} -> a -> Matrix' n a
 scaling x = repeatDiag x 0
@@ -102,6 +102,17 @@ getRow r mat = rewrite sym (minusZeroRight n) in indexRange [One r, All] mat
 export
 getColumn : Fin n -> Matrix m n a -> Vector m a
 getColumn c mat = rewrite sym (minusZeroRight m) in indexRange [All, One c] mat
+
+
+export
+diagonal' : Matrix m n a -> Vector (minimum m n) a
+diagonal' mat with (viewShape mat)
+  _ | Shape [m,n] = fromFunctionNB _ (\[i] => indexUnsafe [i,i] mat)
+
+export
+diagonal : Matrix' n a -> Vector n a
+diagonal mat with (viewShape mat)
+  _ | Shape [n,n] = fromFunctionNB [n] (\[i] => indexUnsafe [i,i] mat)
 
 
 --------------------------------------------------------------------------------
