@@ -16,32 +16,40 @@ public export
 interface Mult a b c | a,b where
   (*.) : a -> b -> c
 
-||| An interface for monoids using the `*.` operator.
+public export
+Mult' : Type -> Type
+Mult' a = Mult a a a
+
+
+||| An interface for groups using the `*.` operator.
 |||
 ||| An instance of this interface must satisfy:
 ||| * `x *. neutral == x`
 ||| * `neutral *. x == x`
+||| * `x *. inverse x == neutral`
+||| * `inverse x *. x == neutral`
 public export
-interface Mult a a a => MultNeutral a where
-  neutral : a
+interface Mult' a => MultGroup a where
+  identity : a
+  inverse : a -> a
 
 
 ||| Multiplication forms a semigroup
 public export
-[MultSemigroup] Mult a a a => Semigroup a where
+[MultSemigroup] Mult' a => Semigroup a where
   (<+>) = (*.)
 
-||| Multiplication with a neutral element forms a monoid
+||| Multiplication with an identity element forms a monoid
 public export
-[MultMonoid] MultNeutral a => Monoid a using MultSemigroup where
-  neutral = Multiply.neutral
+[MultMonoid] MultGroup a => Monoid a using MultSemigroup where
+  neutral = identity
 
 
 ||| Raise a multiplicative value (e.g. a matrix or a transformation) to a natural
 ||| number power.
 public export
-power : MultNeutral a => Nat -> a -> a
-power 0 _ = neutral
+power : MultGroup a => Nat -> a -> a
+power 0 _ = identity
 power 1 x = x
 power (S n@(S _)) x = x *. power n x
 
@@ -50,5 +58,5 @@ power (S n@(S _)) x = x *. power n x
 |||
 ||| This is the operator form of `power`.
 public export
-(^) : MultNeutral a => a -> Nat -> a
+(^) : MultGroup a => a -> Nat -> a
 (^) = flip power

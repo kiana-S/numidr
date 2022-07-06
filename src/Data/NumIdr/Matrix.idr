@@ -59,15 +59,9 @@ fromDiag ds o = fromFunction [m,n] (\[i,j] => maybe o (`index` ds) $ i `eq` j)
     eq (FS _) FZ = Nothing
 
 
-||| The `n`-dimensional identity matrix.
-export
-identity : Num a => {n : _} -> Matrix' n a
-identity = repeatDiag 1 0
-
-
 ||| Construct the matrix that scales a vector by the given value.
 export
-scaling : Num a => {n : _} -> a -> Matrix' n a
+scaling : {n : _} -> Num a => a -> Matrix' n a
 scaling x = repeatDiag x 0
 
 ||| Calculate the rotation matrix of an angle.
@@ -157,5 +151,7 @@ Num a => Mult (Matrix m n a) (Matrix n p a) (Matrix m p a) where
         (\k => m1 !! [i,k] * m2 !! [k,j]) range)
 
 export
-{n : _} -> Num a => MultNeutral (Matrix' n a) where
-  neutral = identity
+{n : _} -> Num a => MultGroup (Matrix' n a) where
+  identity = repeatDiag 1 0
+
+  inverse = ?matrixInverse

@@ -99,11 +99,11 @@ getTranslationVector mat with (viewShape mat)
 
 
 export
-scalingH : Num a => {n : _} -> a -> HMatrix' n a
+scalingH : {n : _} -> Num a => a -> HMatrix' n a
 scalingH x = indexSet [last,last] 1 $ repeatDiag x 0
 
 export
-translationH : Num a => {n : _} -> Vector n a -> HMatrix' n a
+translationH : {n : _} -> Num a => Vector n a -> HMatrix' n a
 translationH = hmatrix identity
 
 export
