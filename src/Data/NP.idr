@@ -13,8 +13,17 @@ data NP : (f : k -> Type) -> (ts : Vect n k) -> Type where
 
 public export
 (all : NP (Eq . f) ts) => Eq (NP f ts) where
-  (==) {all = []} [] [] = True
-  (==) {all = _ :: _} (x :: xs) (y :: ys) = (x == y) && (xs == ys)
+  (==) {all=[]} [] [] = True
+  (==) {all=_::_} (x :: xs) (y :: ys) = (x == y) && (xs == ys)
+
+public export
+(all : NP (Show . f) ts) => Show (NP f ts) where
+  show xs = "[" ++ elems xs ++ "]"
+    where
+      elems : {0 f,ts : _} -> (all : NP (Show . f) ts) => NP f ts -> String
+      elems {all=[]} [] = ""
+      elems {all=[_]} [x] = show x
+      elems {all=_::_} (x :: xs) = show x ++ ", " ++ elems xs
 
 
 

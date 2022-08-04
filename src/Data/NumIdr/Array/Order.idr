@@ -11,11 +11,9 @@ import Data.Vect
 ||| memory location.
 public export
 data Order : Type where
-
   ||| C-like order, or contiguous order. This order stores elements in a
   ||| row-major fashion (the last axis is the least significant).
   COrder : Order
-
   ||| Fortran-like order. This order stores elements in a column-major
   ||| fashion (the first axis is the least significant).
   FOrder : Order

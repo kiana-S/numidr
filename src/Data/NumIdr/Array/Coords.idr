@@ -103,8 +103,8 @@ namespace CoordsRange
   getNewPos : {s : _} -> (rs : CoordsRange {rk} s) -> Vect rk Nat -> Vect (newRank rs) Nat
   getNewPos [] [] = []
   getNewPos (r :: rs) (i :: is) with (cRangeToBounds r)
-    getNewPos (r :: rs) (i :: is) | Left _ = getNewPos rs is
-    getNewPos (r :: rs) (i :: is) | Right (x, _) = minus i x :: getNewPos rs is
+    _ | Left _ = getNewPos rs is
+    _ | Right (x, _) = minus i x :: getNewPos rs is
 
   export
   getCoordsList : {s : Vect rk Nat} -> (rs : CoordsRange s) -> List (Vect rk Nat, Vect (newRank rs) Nat)

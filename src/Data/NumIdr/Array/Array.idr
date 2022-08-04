@@ -276,10 +276,9 @@ indexSet is = indexUpdate is . const
 ||| coordinates are out of bounds.
 export
 indexNB : Vect rk Nat -> Array {rk} s a -> Maybe a
-indexNB is arr with (viewShape arr)
-  _ | Shape s = if concat @{All} $ zipWith (<) is s
-                then Just $ index (getLocation' (strides arr) is) (getPrim arr)
-                else Nothing
+indexNB is arr = if and $ map delay $ zipWith (<) is (shape arr)
+                  then Just $ index (getLocation' (strides arr) is) (getPrim arr)
+                  else Nothing
 
 ||| Index the array using the given coordinates, returning `Nothing` if the
 ||| coordinates are out of bounds.
@@ -389,6 +388,14 @@ export
 resizeLTE : (s' : Vect rk Nat) -> (0 ok : NP Prelude.id (zipWith LTE s' s)) =>
             Array {rk} s a -> Array s' a
 resizeLTE s' arr = resize s' (believe_me ()) arr
+
+
+||| List all of the values in an array in row-major order.
+export
+elements : Array {rk} s a -> Vect (product s) a
+elements (MkArray _ sts sh p) =
+  let elems = map (flip index p . getLocation' sts) (getAllCoords' sh)
+  in assert_total $ case toVect (product sh) elems of Just v => v
 
 
 ||| List all of the values in an array along with their coordinates.
