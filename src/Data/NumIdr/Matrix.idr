@@ -101,12 +101,12 @@ getColumn c mat = rewrite sym (minusZeroRight m) in indexRange [All, One c] mat
 export
 diagonal' : Matrix m n a -> Vector (minimum m n) a
 diagonal' mat with (viewShape mat)
-  _ | Shape [m,n] = fromFunctionNB _ (\[i] => indexUnsafe [i,i] mat)
+  _ | Shape [m,n] = fromFunctionNB _ (\[i] => mat!#[i,i])
 
 export
 diagonal : Matrix' n a -> Vector n a
 diagonal mat with (viewShape mat)
-  _ | Shape [n,n] = fromFunctionNB [n] (\[i] => indexUnsafe [i,i] mat)
+  _ | Shape [n,n] = fromFunctionNB [n] (\[i] => mat!#[i,i])
 
 
 --------------------------------------------------------------------------------

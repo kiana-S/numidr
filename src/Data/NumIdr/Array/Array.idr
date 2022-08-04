@@ -243,6 +243,7 @@ array v = MkArray COrder (calcStrides COrder s) s (fromList $ collapse v)
 
 infixl 10 !!
 infixl 10 !?
+infixl 10 !#
 infixl 11 !!..
 infixl 11 !?..
 
@@ -395,6 +396,7 @@ export
 elements : Array {rk} s a -> Vect (product s) a
 elements (MkArray _ sts sh p) =
   let elems = map (flip index p . getLocation' sts) (getAllCoords' sh)
+  -- TODO: prove that the number of elements is `product s`
   in assert_total $ case toVect (product sh) elems of Just v => v
 
 

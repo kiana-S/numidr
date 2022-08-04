@@ -121,6 +121,7 @@ export
 --------------------------------------------------------------------------------
 
 
+||| Construct a vector by pulling coordinates from another vector.
 export
 swizzle : Vect n (Fin m) -> Vector m a -> Vector n a
 swizzle p v = rewrite sym (lengthCorrect p)
