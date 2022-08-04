@@ -124,11 +124,35 @@ hconcat : Matrix m n a -> Matrix m n' a -> Matrix m (n + n') a
 hconcat = concat 1
 
 
-||| Calculate the kronecker product of two vectors as a matrix.
+||| Calculate the outer product of two vectors as a matrix.
 export
-kronecker : Num a => Vector m a -> Vector n a -> Matrix m n a
-kronecker a b with (viewShape a, viewShape b)
-  _ | (Shape [m], Shape [n]) = fromFunction [m,n] (\[i,j] => a !! i * b !! j)
+outer : Num a => Vector m a -> Vector n a -> Matrix m n a
+outer a b with (viewShape a, viewShape b)
+  _ | (Shape [m], Shape [n]) = fromFunction [m,n] (\[i,j] => a!!i * b!!j)
+
+
+export
+trace : Num a => Matrix m n a -> a
+trace = sum . diagonal'
+
+
+export
+det : Neg a => Matrix' n a -> a
+det {n} mat with (viewShape mat)
+  det {n=0} mat | Shape [0,0] = 1
+  det {n=1} mat | Shape [1,1] = mat!![0,0]
+  det {n=2} mat | Shape [2,2] = let [a,b,c,d] = elements mat in a * d - b * c
+  _ | Shape [n,n] = sum $
+      map (\(p,s) => s * product (map (\i => indexUnsafe [finToNat i,index i p] mat) range))
+      $ permutations n
+  where
+    -- Compute all permutations
+    permutations : (n : Nat) -> List (Vect n Nat, a)
+    permutations Z = [([], 1)]
+    permutations (S n) = do (p,s) <- permutations n
+                            i <- toList $ range {len=S n}
+                            pure (insertAt i Z (map S p),
+                              if (finToNat i) `mod` 2 == 0 then s else -s)
 
 
 --------------------------------------------------------------------------------
@@ -155,3 +179,8 @@ export
 
 export
 {n : _} -> Neg a => Fractional a => MultGroup (Matrix' n a) where
+  inverse {n=0} mat = mat
+  inverse {n=1} mat = recip mat
+  inverse {n=2} mat = let [a,b,c,d] = elements mat
+                      in recip (det mat) *. matrix [[d,-b],[-c,a]]
+  inverse {n} mat = ?matrixInverse
