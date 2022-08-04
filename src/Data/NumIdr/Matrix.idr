@@ -140,18 +140,18 @@ export
 Num a => Mult (Matrix m n a) (Vector n a) (Vector m a) where
   mat *. v with (viewShape mat)
     _ | Shape [m,n] = fromFunction [m]
-      (\[i] => foldMap @{%search} @{Additive}
-        (\j => mat !! [i,j] * v !! j) range)
+      (\[i] => sum $ map (\j => mat!![i,j] * v!!j) range)
 
 export
 Num a => Mult (Matrix m n a) (Matrix n p a) (Matrix m p a) where
   m1 *. m2 with (viewShape m1, viewShape m2)
     _ | (Shape [m,n], Shape [n,p]) = fromFunction [m,p]
-      (\[i,j] => foldMap @{%search} @{Additive}
-        (\k => m1 !! [i,k] * m2 !! [k,j]) range)
+      (\[i,j] => sum $ map (\k => m1!![i,k] * m2!![k,j]) range)
 
 export
-{n : _} -> Num a => MultGroup (Matrix' n a) where
+{n : _} -> Num a => MultMonoid (Matrix' n a) where
   identity = repeatDiag 1 0
 
-  inverse = ?matrixInverse
+
+export
+{n : _} -> Neg a => Fractional a => MultGroup (Matrix' n a) where

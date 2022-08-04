@@ -21,28 +21,36 @@ Mult' : Type -> Type
 Mult' a = Mult a a a
 
 
+||| An interface for monoids using the `*.` operator.
+|||
+||| An instance of this interface must satisfy:
+||| * `x *. identity == x`
+||| * `identity *. x == x`
+public export
+interface Mult' a => MultMonoid a where
+  identity : a
+
 ||| An interface for groups using the `*.` operator.
 |||
 ||| An instance of this interface must satisfy:
-||| * `x *. neutral == x`
-||| * `neutral *. x == x`
-||| * `x *. inverse x == neutral`
-||| * `inverse x *. x == neutral`
+||| * `x *. inverse x == identity`
+||| * `inverse x *. x == identity`
 public export
-interface Mult' a => MultGroup a where
-  identity : a
+interface MultMonoid a => MultGroup a where
   inverse : a -> a
 
 
-||| Multiplication forms a semigroup
-public export
-[MultSemigroup] Mult' a => Semigroup a where
-  (<+>) = (*.)
+namespace Semigroup
+  ||| Multiplication forms a semigroup
+  public export
+  [Mult] Mult' a => Semigroup a where
+    (<+>) = (*.)
 
-||| Multiplication with an identity element forms a monoid
-public export
-[MultMonoid] MultGroup a => Monoid a using MultSemigroup where
-  neutral = identity
+namespace Monoid
+  ||| Multiplication with an identity element forms a monoid
+  public export
+  [Mult] MultMonoid a => Monoid a using Semigroup.Mult where
+    neutral = identity
 
 
 ||| Raise a multiplicative value (e.g. a matrix or a transformation) to a natural
