@@ -44,6 +44,10 @@ unsafeFromIns size ins = unsafePerformIO $ do
     for_ ins $ \(i,x) => arrayDataSet i x arr
     pure $ MkPrimArray size arr
 
+export
+unsafeDoIns : List (Nat, a) -> PrimArray a -> IO ()
+unsafeDoIns ins arr = for_ ins $ \(i,x) => arrayDataSet i x arr.content
+
 ||| Create an array given its size and a function to generate its elements by
 ||| its index.
 export

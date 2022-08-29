@@ -65,6 +65,6 @@ power (S n@(S _)) x = x *. power n x
 ||| number power.
 |||
 ||| This is the operator form of `power`.
-public export
+public export %inline
 (^) : MultGroup a => a -> Nat -> a
-(^) = flip power
+a ^ n = power n a
