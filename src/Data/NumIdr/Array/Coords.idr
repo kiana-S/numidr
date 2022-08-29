@@ -8,6 +8,23 @@ import Data.NP
 %default total
 
 
+-- A Nat-based range function with better semantics
+public export
+range : Nat -> Nat -> List Nat
+range x y = if x < y then assert_total $ takeBefore (>= y) (countFrom x S)
+                     else []
+
+-- helpful theorems for working with ranges
+
+export
+rangeLen : (x,y : Nat) -> length (range x y) = minus y x
+rangeLen x y = believe_me $ Refl {x = minus y x}
+
+export
+rangeLenZ : (x : Nat) -> length (range 0 x) = x
+rangeLenZ x = rangeLen 0 x `trans` minusZeroRight x
+
+
 --------------------------------------------------------------------------------
 -- Array coordinate types
 --------------------------------------------------------------------------------
@@ -26,6 +43,44 @@ toNB [] = []
 toNB (i :: is) = finToNat i :: toNB is
 
 
+namespace Strict
+  public export
+  data CRange : Nat -> Type where
+    One : Fin n -> CRange n
+    All : CRange n
+    StartBound : Fin (S n) -> CRange n
+    EndBound : Fin (S n) -> CRange n
+    Bounds : Fin (S n) -> Fin (S n) -> CRange n
+    Indices : List (Fin n) -> CRange n
+    Filter : (Fin n -> Bool) -> CRange n
+
+  infix 0 ...
+  public export
+  (...) : Fin (S n) -> Fin (S n) -> CRange n
+  (...) = Bounds
+
+
+  public export
+  CoordsRange : (s : Vect rk Nat) -> Type
+  CoordsRange = NP CRange
+
+
+namespace NB
+  public export
+  data CRangeNB : Type where
+    All : CRangeNB
+    StartBound : Nat -> CRangeNB
+    EndBound : Nat -> CRangeNB
+    Bounds : Nat -> Nat -> CRangeNB
+    Indices : List Nat -> CRangeNB
+    Filter : (Nat -> Bool) -> CRangeNB
+
+
+--------------------------------------------------------------------------------
+-- Indexing helper functions
+--------------------------------------------------------------------------------
+
+
 public export
 Vects : Vect rk Nat -> Type -> Type
 Vects []     a = a
@@ -38,7 +93,7 @@ collapse {s=_::_} = concat . map collapse
 
 
 export
-mapWithIndex : {s : Vect rk Nat} -> (Vect rk Nat -> a -> b) -> Vects {rk} s a -> Vects s b
+mapWithIndex : {s : Vect rk Nat} -> (Vect rk Nat -> a -> b) -> Vects s a -> Vects s b
 mapWithIndex {s=[]}   f x = f [] x
 mapWithIndex {s=_::_} f v = mapWithIndex' (\i => mapWithIndex (\is => f (i::is))) v
   where
@@ -58,86 +113,73 @@ getLocation : Vect rk Nat -> Coords {rk} s -> Nat
 getLocation sts is = getLocation' sts (toNB is)
 
 
---------------------------------------------------------------------------------
--- Array coordinate types
---------------------------------------------------------------------------------
+namespace Strict
+  public export
+  cRangeToList : {n : Nat} -> CRange n -> Either Nat (List Nat)
+  cRangeToList (One x) = Left (cast x)
+  cRangeToList All = Right $ range 0 n
+  cRangeToList (StartBound x) = Right $ range (cast x) n
+  cRangeToList (EndBound x) = Right $ range 0 (cast x)
+  cRangeToList (Bounds x y) = Right $ range (cast x) (cast y)
+  cRangeToList (Indices xs) = Right $ map cast xs
+  cRangeToList (Filter p) = Right $ map cast $ filter p $ toList Fin.range
 
 
--- A Nat-based range function with better semantics
-public export
-range : Nat -> Nat -> List Nat
-range x y = if x < y then assert_total $ takeBefore (>= y) (countFrom x S)
-                     else []
+  public export
+  newRank : {s : _} -> CoordsRange s -> Nat
+  newRank [] = 0
+  newRank (r :: rs) = case cRangeToList r of
+                        Left _ => newRank rs
+                        Right _ => S (newRank rs)
 
--- helpful theorems for working with ranges
-
-export
-rangeLen : (x,y : Nat) -> length (range x y) = minus y x
-rangeLen x y = believe_me $ Refl {x = minus y x}
-
-export
-rangeLenZ : (x : Nat) -> length (range 0 x) = x
-rangeLenZ x = rangeLen 0 x `trans` minusZeroRight x
-
-
-public export
-data CRange : Nat -> Type where
-  One : Fin n -> CRange n
-  All : CRange n
-  StartBound : Fin (S n) -> CRange n
-  EndBound : Fin (S n) -> CRange n
-  Bounds : Fin (S n) -> Fin (S n) -> CRange n
-  Indices : List (Fin n) -> CRange n
-  Filter : (Fin n -> Bool) -> CRange n
-
-infix 0 ...
-public export
-(...) : Fin (S n) -> Fin (S n) -> CRange n
-(...) = Bounds
+  ||| Calculate the new shape given by a coordinate range.
+  public export
+  newShape : {s : _} -> (rs : CoordsRange s) -> Vect (newRank rs) Nat
+  newShape [] = []
+  newShape (r :: rs) with (cRangeToList r)
+    newShape (r :: rs) | Left _ = newShape rs
+    newShape (r :: rs) | Right xs = length xs :: newShape rs
 
 
-public export
-CoordsRange : (s : Vect rk Nat) -> Type
-CoordsRange = NP CRange
+  getNewPos : {s : _} -> (rs : CoordsRange {rk} s) -> Vect rk Nat -> Vect (newRank rs) Nat
+  getNewPos [] [] = []
+  getNewPos (r :: rs) (i :: is) with (cRangeToList r)
+    _ | Left _ = getNewPos rs is
+    _ | Right xs = cast (assert_total $ case findIndex (==i) xs of Just x => x)
+                    :: getNewPos rs is
 
-public export
-cRangeToList : {n : Nat} -> CRange n -> Either Nat (List Nat)
-cRangeToList (One x) = Left (cast x)
-cRangeToList All = Right $ range 0 n
-cRangeToList (StartBound x) = Right $ range (cast x) n
-cRangeToList (EndBound x) = Right $ range 0 (cast x)
-cRangeToList (Bounds x y) = Right $ range (cast x) (cast y)
-cRangeToList (Indices xs) = Right $ map cast xs
-cRangeToList (Filter p) = Right $ map cast $ filter p $ toList Fin.range
-
-
-public export
-newRank : {s : _} -> CoordsRange s -> Nat
-newRank [] = 0
-newRank (r :: rs) = case cRangeToList r of
-                      Left _ => newRank rs
-                      Right _ => S (newRank rs)
-
-||| Calculate the new shape given by a coordinate range.
-public export
-newShape : {s : _} -> (rs : CoordsRange s) -> Vect (newRank rs) Nat
-newShape [] = []
-newShape (r :: rs) with (cRangeToList r)
-  newShape (r :: rs) | Left _ = newShape rs
-  newShape (r :: rs) | Right xs = length xs :: newShape rs
+  export
+  getCoordsList : {s : Vect rk Nat} -> (rs : CoordsRange s) -> List (Vect rk Nat, Vect (newRank rs) Nat)
+  getCoordsList rs = map (\is => (is, getNewPos rs is)) $ go rs
+    where
+      go : {0 rk : _} -> {s : Vect rk Nat} -> CoordsRange s -> List (Vect rk Nat)
+      go [] = [[]]
+      go (r :: rs) = [| (either pure id (cRangeToList r)) :: go rs |]
 
 
-getNewPos : {s : _} -> (rs : CoordsRange {rk} s) -> Vect rk Nat -> Vect (newRank rs) Nat
-getNewPos [] [] = []
-getNewPos (r :: rs) (i :: is) with (cRangeToList r)
-  _ | Left _ = getNewPos rs is
-  _ | Right xs = cast (assert_total $ case findIndex (==i) xs of Just x => x)
-                  :: getNewPos rs is
+namespace NB
+  export
+  cRangeNBToList : Nat -> CRangeNB -> List Nat
+  cRangeNBToList s All = range 0 s
+  cRangeNBToList s (StartBound x) = range x s
+  cRangeNBToList s (EndBound x) = range 0 x
+  cRangeNBToList s (Bounds x y) = range x (minimum y s)
+  cRangeNBToList s (Indices xs) = filter (<s) xs
+  cRangeNBToList s (Filter p) = filter p $ range 0 s
 
-export
-getCoordsList : {s : Vect rk Nat} -> (rs : CoordsRange s) -> List (Vect rk Nat, Vect (newRank rs) Nat)
-getCoordsList rs = map (\is => (is, getNewPos rs is)) $ go rs
-  where
-    go : {0 rk : _} -> {s : Vect rk Nat} -> CoordsRange s -> List (Vect rk Nat)
-    go [] = pure []
-    go (r :: rs) = [| (either pure id (cRangeToList r)) :: go rs |]
+  export
+  newShape : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat
+  newShape = zipWith (length .: cRangeNBToList)
+
+  export
+  getNewPos : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat -> Vect rk Nat
+  getNewPos = zipWith3 (\d,r,i => assert_total $
+    case findIndex (==i) (cRangeNBToList d r) of Just x => cast x)
+
+  export
+  getCoordsList : Vect rk Nat -> Vect rk CRangeNB -> List (Vect rk Nat, Vect rk Nat)
+  getCoordsList s rs = map (\is => (is, getNewPos s rs is)) $ go s rs
+    where
+      go : {0 rk : _} -> Vect rk Nat -> Vect rk CRangeNB -> List (Vect rk Nat)
+      go [] [] = [[]]
+      go (d :: s) (r :: rs) = [| cRangeNBToList d r :: go s rs |]
