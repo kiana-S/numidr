@@ -141,16 +141,6 @@ hstack : {m : _} -> Vect n (Vector m a) -> Matrix m n a
 hstack = stack 1
 
 
-export
-transpose : Matrix m n a -> Matrix n m a
-transpose mat with (viewShape mat)
-  _ | Shape [m,n] = fromFunctionNB [n,m] (\[i,j] => mat!#[j,i])
-
-export
-(.T) : Matrix m n a -> Matrix n m a
-(.T) = transpose
-
-
 ||| Calculate the outer product of two vectors as a matrix.
 export
 outer : Num a => Vector m a -> Vector n a -> Matrix m n a

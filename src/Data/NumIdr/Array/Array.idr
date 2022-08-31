@@ -484,6 +484,15 @@ stack axis arrs = rewrite sym (lengthCorrect arrs) in
     getAxisInd FZ (i :: is) = (i, is)
     getAxisInd {s=_::_} (FS ax) (i :: is) = mapSnd (i::) (getAxisInd ax is)
 
+export
+transpose : Array s a -> Array (reverse s) a
+transpose arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB (reverse s) (\is => arr !# reverse is)
+
+export
+(.T) : Array s a -> Array (reverse s) a
+(.T) = transpose
+
 
 --------------------------------------------------------------------------------
 -- Implementations
