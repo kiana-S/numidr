@@ -1,6 +1,8 @@
 module Data.NumIdr.Matrix
 
+import Data.List
 import Data.Vect
+import Data.Bool.Xor
 import Data.NumIdr.Multiply
 import public Data.NumIdr.Array
 import Data.NumIdr.Vector
@@ -90,12 +92,12 @@ indexNB m n = indexNB [m,n]
 ||| Return a row of the matrix as a vector.
 export
 getRow : Fin m -> Matrix m n a -> Vector n a
-getRow r mat = rewrite sym (minusZeroRight n) in indexRange [One r, All] mat
+getRow r mat = rewrite sym (rangeLenZ n) in mat !!.. [One r, All]
 
 ||| Return a column of the matrix as a vector.
 export
 getColumn : Fin n -> Matrix m n a -> Vector m a
-getColumn c mat = rewrite sym (minusZeroRight m) in indexRange [All, One c] mat
+getColumn c mat = rewrite sym (rangeLenZ m) in mat !!.. [All, One c]
 
 
 export
@@ -109,8 +111,14 @@ diagonal mat with (viewShape mat)
   _ | Shape [n,n] = fromFunctionNB [n] (\[i] => mat!#[i,i])
 
 
+-- TODO: throw an actual proof in here to avoid the unsafety
+export
+minor : Fin (S m) -> Fin (S n) -> Matrix (S m) (S n) a -> Matrix m n a
+minor i j mat = believe_me $ mat !!.. [Filter (/=i), Filter (/=j)]
+
+
 --------------------------------------------------------------------------------
--- Operations
+-- Basic operations
 --------------------------------------------------------------------------------
 
 ||| Concatenate two matrices vertically.
@@ -124,6 +132,25 @@ hconcat : Matrix m n a -> Matrix m n' a -> Matrix m (n + n') a
 hconcat = concat 1
 
 
+export
+vstack : {n : _} -> Vect m (Vector n a) -> Matrix m n a
+vstack = stack 0
+
+export
+hstack : {m : _} -> Vect n (Vector m a) -> Matrix m n a
+hstack = stack 1
+
+
+export
+transpose : Matrix m n a -> Matrix n m a
+transpose mat with (viewShape mat)
+  _ | Shape [m,n] = fromFunctionNB [n,m] (\[i,j] => mat!#[j,i])
+
+export
+(.T) : Matrix m n a -> Matrix n m a
+(.T) = transpose
+
+
 ||| Calculate the outer product of two vectors as a matrix.
 export
 outer : Num a => Vector m a -> Vector n a -> Matrix m n a
@@ -134,25 +161,6 @@ outer a b with (viewShape a, viewShape b)
 export
 trace : Num a => Matrix m n a -> a
 trace = sum . diagonal'
-
-
-export
-det : Neg a => Matrix' n a -> a
-det {n} mat with (viewShape mat)
-  det {n=0} mat | Shape [0,0] = 1
-  det {n=1} mat | Shape [1,1] = mat!![0,0]
-  det {n=2} mat | Shape [2,2] = let [a,b,c,d] = elements mat in a * d - b * c
-  _ | Shape [n,n] = sum $
-      map (\(p,s) => s * product (map (\i => indexUnsafe [finToNat i,index i p] mat) range))
-      $ permutations n
-  where
-    -- Compute all permutations
-    permutations : (n : Nat) -> List (Vect n Nat, a)
-    permutations Z = [([], 1)]
-    permutations (S n) = do (p,s) <- permutations n
-                            i <- toList $ range {len=S n}
-                            pure (insertAt i Z (map S p),
-                              if (finToNat i) `mod` 2 == 0 then s else -s)
 
 
 --------------------------------------------------------------------------------
@@ -177,10 +185,111 @@ export
   identity = repeatDiag 1 0
 
 
+--------------------------------------------------------------------------------
+-- Matrix decomposition
+--------------------------------------------------------------------------------
+
+
+-- LU Decomposition
+public export
+record DecompLU {0 n,a : _} (mat : Matrix' n a) where
+  constructor MkLU
+  lower, upper : Matrix' n a
+
 export
-{n : _} -> Neg a => Fractional a => MultGroup (Matrix' n a) where
-  inverse {n=0} mat = mat
-  inverse {n=1} mat = recip mat
-  inverse {n=2} mat = let [a,b,c,d] = elements mat
-                      in recip (det mat) *. matrix [[d,-b],[-c,a]]
-  inverse {n} mat = ?matrixInverse
+Show a => Show (DecompLU {a} mat) where
+  showPrec p (MkLU l u) = showCon p "MkLU" $ showArg l ++ showArg u
+
+
+iterateN : (n : Nat) -> (Fin n -> a -> a) -> a -> a
+iterateN 0 f x = x
+iterateN 1 f x = f FZ x
+iterateN (S n@(S _)) f x = iterateN n (f . FS) $ f FZ x
+
+export
+decompLU : Neg a => Fractional a => (mat : Matrix' n a) -> DecompLU mat
+decompLU {n} mat with (viewShape mat)
+  _ | Shape [n,n] = iterateN n doolittle (MkLU identity mat)
+  where
+    doolittle : Fin n -> DecompLU mat -> DecompLU mat
+    doolittle i (MkLU l u) =
+      let v = rewrite rangeLen (S i') n in fromFunctionNB [minus n (S i')]
+                (\[x] => u!#[S i' + x,i'] / u!#[i',i'])
+          low = indexSetRange [StartBound (FS i), One i] (-v) identity
+      in MkLU (indexSetRange [StartBound (FS i), One i] v l) (low *. u)
+      where i' : Nat
+            i' = cast i
+
+
+-- LUP Decomposition
+public export
+record DecompLUP {0 n,a : _} (mat : Matrix' n a) where
+  constructor MkLUP
+  lower, upper, permute : Matrix' n a
+  swaps : Nat
+
+export
+Show a => Show (DecompLUP {a} mat) where
+  showPrec p (MkLUP l u pr b) = showCon p "MkLUP" $
+    showArg l ++ showArg u ++ showArg pr ++ showArg b
+
+export
+fromLU : Num a => DecompLU {n,a} mat -> DecompLUP mat
+fromLU {n} (MkLU l u) with (viewShape l)
+  _ | Shape [n,n] = MkLUP l u identity 0
+
+export
+decompLUP : Ord a => Abs a => Neg a => Fractional a =>
+            (mat : Matrix' n a) -> DecompLUP mat
+decompLUP {n} mat with (viewShape mat)
+  decompLUP {n=0} mat | Shape [0,0] = MkLUP mat mat mat 0
+  decompLUP {n=S n} mat | Shape [S n,S n] =
+    iterateN (S n) doolittle (MkLUP identity mat identity 0)
+  where
+    maxIndex : (s,a) -> List (s,a) -> (s,a)
+    maxIndex x [] = x
+    maxIndex _ [x] = x
+    maxIndex x ((a,b)::(c,d)::xs) =
+      if abs b < abs d then assert_total $ maxIndex x ((c,d)::xs)
+                       else assert_total $ maxIndex x ((a,b)::xs)
+
+    doolittle : Fin (S n) -> DecompLUP mat -> DecompLUP mat
+    doolittle i (MkLUP l u p sw) =
+      let (maxi, maxv) = mapFst ((+i') . head)
+                           (maxIndex ([0],0) $ enumerateNB $
+                           u !!.. [StartBound (weaken i), One i])
+          u' = if maxi == i' then u
+               else fromFunctionNB _ (\[x,y] =>
+                 if x==i' then u!#[maxi,y]
+                 else if x==maxi then u!#[i',y]
+                 else u!#[x,y])
+          p' = if maxi == i' then p
+               else fromFunctionNB _ (\[x,y] =>
+                 if x==i' then p!#[maxi,y]
+                 else if x==maxi then p!#[i',y]
+                 else p!#[x,y])
+          v = rewrite rangeLen (S i') (S n) in fromFunctionNB [minus n i']
+                (\[x] => u'!#[S i' + x,i'] / u'!#[i',i'])
+          low = indexSetRange [StartBound (FS i), One i] (-v) identity
+      in if maxv == 0 then MkLUP l u p sw else
+            MkLUP (indexSetRange [StartBound (FS i), One i] v l)
+              (low *. u') p' (if maxi==i' then S sw else sw)
+      where i' : Nat
+            i' = cast i
+
+
+--------------------------------------------------------------------------------
+-- Matrix properties
+--------------------------------------------------------------------------------
+
+
+export
+det : Ord a => Abs a => Neg a => Fractional a =>
+      Matrix' n a -> a
+det {n} mat with (viewShape mat)
+  det {n=0} mat | Shape [0,0] = 1
+  det {n=1} mat | Shape [1,1] = mat!![0,0]
+  det {n=2} mat | Shape [2,2] = let [a,b,c,d] = elements mat in a*d - b*c
+  _ | Shape [n,n] = let MkLUP l u p sw = decompLUP mat
+                    in (if sw `mod` 2 == 0 then 1 else -1)
+                          * product (diagonal l) * product (diagonal u)

@@ -28,6 +28,10 @@ public export
 
 
 public export
+head : NP f (t :: ts) -> f t
+head (x :: _) = x
+
+public export
 index : (i : Fin n) -> NP {n} f ts -> f (index i ts)
 index FZ (x :: xs) = x
 index (FS i) (x :: xs) = index i xs
