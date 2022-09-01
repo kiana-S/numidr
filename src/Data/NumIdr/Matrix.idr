@@ -92,12 +92,12 @@ indexNB m n = indexNB [m,n]
 ||| Return a row of the matrix as a vector.
 export
 getRow : Fin m -> Matrix m n a -> Vector n a
-getRow r mat = rewrite sym (rangeLenZ n) in mat !!.. [One r, All]
+getRow r mat = rewrite sym (rangeLenZ n) in mat!!..[One r, All]
 
 ||| Return a column of the matrix as a vector.
 export
 getColumn : Fin n -> Matrix m n a -> Vector m a
-getColumn c mat = rewrite sym (rangeLenZ m) in mat !!.. [All, One c]
+getColumn c mat = rewrite sym (rangeLenZ m) in mat!!..[All, One c]
 
 
 export
@@ -114,7 +114,7 @@ diagonal mat with (viewShape mat)
 -- TODO: throw an actual proof in here to avoid the unsafety
 export
 minor : Fin (S m) -> Fin (S n) -> Matrix (S m) (S n) a -> Matrix m n a
-minor i j mat = believe_me $ mat !!.. [Filter (/=i), Filter (/=j)]
+minor i j mat = believe_me $ mat!!..[Filter (/=i), Filter (/=j)]
 
 
 --------------------------------------------------------------------------------

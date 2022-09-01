@@ -9,7 +9,7 @@ import Data.NP
 
 
 -- A Nat-based range function with better semantics
-public export
+export
 range : Nat -> Nat -> List Nat
 range x y = if x < y then assert_total $ takeBefore (>= y) (countFrom x S)
                      else []
