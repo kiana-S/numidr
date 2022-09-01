@@ -5,6 +5,7 @@ import Data.List1
 import Data.Vect
 import Data.Zippable
 import Data.NP
+import Data.Permutation
 import Data.NumIdr.Multiply
 import Data.NumIdr.PrimArray
 import Data.NumIdr.Array.Order
@@ -492,6 +493,27 @@ transpose arr with (viewShape arr)
 export
 (.T) : Array s a -> Array (reverse s) a
 (.T) = transpose
+
+
+export
+swapAxes : (i,j : Fin rk) -> Array s a -> Array (swapElems i j s) a
+swapAxes i j arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB _ (\is => arr !# swapElems i j is)
+
+export
+permuteAxes : (p : Permutation rk) -> Array s a -> Array (permuteVect p s) a
+permuteAxes p arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB _ (\is => arr !# permuteVect p s)
+
+export
+swapInAxis : (ax : Fin rk) -> (i,j : Fin (index ax s)) -> Array s a -> Array s a
+swapInAxis ax i j arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt ax (swapValues i j) is)
+
+export
+permuteInAxis : (ax : Fin rk) -> Permutation (index ax s) -> Array s a -> Array s a
+permuteInAxis ax p arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt ax (permuteValues p) is)
 
 
 --------------------------------------------------------------------------------
