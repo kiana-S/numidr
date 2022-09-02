@@ -16,6 +16,10 @@ swap : (i,j : Fin n) -> Permutation n
 swap x y = MkPerm [(x,y)]
 
 export
+swaps : List (Fin n, Fin n) -> Permutation n
+swaps = MkPerm
+
+export
 appendSwap : (i,j : Fin n) -> Permutation n -> Permutation n
 appendSwap i j (MkPerm a) = MkPerm ((i,j)::a)
 
@@ -50,6 +54,12 @@ swapValues i j x = if x == cast i then cast j
 export
 permuteValues : Permutation n -> Nat -> Nat
 permuteValues p = foldMap @{%search} @{mon} (\(i,j) => swapValues i j) p.swaps
+
+
+
+export
+Show (Permutation n) where
+  showPrec p (MkPerm a) = showCon p "swaps" $ showArg a
 
 export
 Mult (Permutation n) (Permutation n) (Permutation n) where
