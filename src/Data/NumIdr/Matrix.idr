@@ -350,7 +350,7 @@ detWithLUP : (Ord a, Abs a, Neg a, Fractional a) =>
             (mat : Matrix' n a) -> DecompLUP mat -> a
 detWithLUP {n} mat lup =
   (if numSwaps lup `mod` 2 == 0 then 1 else -1)
-    * product (diagonal lup.lower) * product (diagonal lup.upper)
+    * product (diagonal lup.lu)
 
 export
 det : (Ord a, Abs a, Neg a, Fractional a) => Matrix' n a -> a

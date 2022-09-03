@@ -56,7 +56,7 @@ namespace Monoid
 ||| Raise a multiplicative value (e.g. a matrix or a transformation) to a natural
 ||| number power.
 public export
-power : MultGroup a => Nat -> a -> a
+power : MultMonoid a => Nat -> a -> a
 power 0 _ = identity
 power 1 x = x
 power (S n@(S _)) x = x *. power n x
@@ -66,5 +66,5 @@ power (S n@(S _)) x = x *. power n x
 |||
 ||| This is the operator form of `power`.
 public export %inline
-(^) : MultGroup a => a -> Nat -> a
+(^) : MultMonoid a => a -> Nat -> a
 a ^ n = power n a
