@@ -10,6 +10,7 @@ sourcedir = "src"
 readme = "README.md"
 
 modules = Data.NP,
+          Data.Permutation,
           Data.NumIdr.Array,
           Data.NumIdr.Array.Array,
           Data.NumIdr.Array.Coords,
