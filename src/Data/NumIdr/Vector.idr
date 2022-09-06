@@ -1,7 +1,8 @@
 module Data.NumIdr.Vector
 
 import Data.Vect
-import Data.NumIdr.Multiply
+import Data.Permutation
+import Data.NumIdr.Interfaces
 import public Data.NumIdr.Array
 
 %default total
@@ -117,7 +118,7 @@ export
 
 
 --------------------------------------------------------------------------------
--- Swizzling
+-- Swizzling & permuting elements
 --------------------------------------------------------------------------------
 
 
@@ -129,6 +130,14 @@ swizzle p v = rewrite sym (lengthCorrect p)
                 index (index (rewrite sym (lengthCorrect p) in i) p) v
               )
 
+
+export
+swapCoords : (i,j : Fin n) -> Vector n a -> Vector n a
+swapCoords = swapInAxis 0
+
+export
+permuteCoords : Permutation n -> Vector n a -> Vector n a
+permuteCoords = permuteInAxis 0
 
 
 --------------------------------------------------------------------------------

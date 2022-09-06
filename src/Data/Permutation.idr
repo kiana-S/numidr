@@ -2,8 +2,9 @@ module Data.Permutation
 
 import Data.List
 import Data.Vect
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 
+%default total
 
 export
 record Permutation n where

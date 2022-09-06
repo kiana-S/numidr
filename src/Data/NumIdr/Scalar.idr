@@ -1,7 +1,7 @@
 module Data.NumIdr.Scalar
 
 import Data.Vect
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 import Data.NumIdr.PrimArray
 import public Data.NumIdr.Array
 

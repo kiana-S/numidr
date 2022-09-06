@@ -1,7 +1,31 @@
-module Data.NumIdr.Multiply
+module Data.NumIdr.Interfaces
 
 %default total
 
+
+--------------------------------------------------------------------------------
+-- Field
+--------------------------------------------------------------------------------
+
+
+public export
+Field : Type -> Type
+Field a = (Eq a, Neg a, Fractional a)
+
+
+public export
+interface (Eq a, Neg a, Fractional a) => Scalar a where
+  abscmp : a -> a -> Ordering
+
+
+export
+(Ord a, Abs a, Neg a, Fractional a) => Scalar a where
+  abscmp x y = compare (abs x) (abs y)
+
+
+--------------------------------------------------------------------------------
+-- Multiplication
+--------------------------------------------------------------------------------
 
 infixr 9 *.
 infixr 10 ^

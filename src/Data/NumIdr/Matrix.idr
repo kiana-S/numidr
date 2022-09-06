@@ -3,7 +3,7 @@ module Data.NumIdr.Matrix
 import Data.List
 import Data.Vect
 import Data.Permutation
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 import public Data.NumIdr.Array
 import Data.NumIdr.Vector
 
@@ -278,7 +278,7 @@ iterateN 1 f x = f FZ x
 iterateN (S n@(S _)) f x = iterateN n (f . FS) $ f FZ x
 
 
-gaussStep : {m,n : _} -> (Eq a, Neg a, Fractional a) =>
+gaussStep : {m,n : _} -> Field a =>
             Fin (minimum m n) -> Matrix m n a -> Matrix m n a
 gaussStep i lu =
     if all (==0) $ getColumn (minWeakenRight i) lu then lu else
@@ -294,7 +294,7 @@ gaussStep i lu =
             (flip (-) offsets) lu'
 
 export
-decompLU : (Eq a, Neg a, Fractional a) => (mat : Matrix m n a) -> Maybe (DecompLU mat)
+decompLU : Field a => (mat : Matrix m n a) -> Maybe (DecompLU mat)
 decompLU mat with (viewShape mat)
   _ | Shape [m,n] = map MkLU $ iterateN (minimum m n) (\i => (>>= gaussStepMaybe i)) (Just mat)
   where
@@ -353,8 +353,7 @@ fromLU (MkLU lu) = MkLUP lu identity 0
 
 
 export
-decompLUP : (Ord a, Abs a, Neg a, Fractional a) =>
-            (mat : Matrix m n a) -> DecompLUP mat
+decompLUP : Scalar a => (mat : Matrix m n a) -> DecompLUP mat
 decompLUP {m,n} mat with (viewShape mat)
   decompLUP {m=0,n} mat | Shape [0,n] = MkLUP mat identity 0
   decompLUP {m=S m,n=0} mat | Shape [S m,0] = MkLUP mat identity 0
@@ -365,8 +364,8 @@ decompLUP {m,n} mat with (viewShape mat)
     maxIndex x [] = x
     maxIndex _ [x] = x
     maxIndex x ((a,b)::(c,d)::xs) =
-      if abs b < abs d then assert_total $ maxIndex x ((c,d)::xs)
-                       else assert_total $ maxIndex x ((a,b)::xs)
+      if abscmp b d == LT then assert_total $ maxIndex x ((c,d)::xs)
+                          else assert_total $ maxIndex x ((a,b)::xs)
 
     gaussStepSwap : Fin (minimum (S m) (S n)) -> DecompLUP mat -> DecompLUP mat
     gaussStepSwap i (MkLUP lu p sw) =
@@ -385,16 +384,20 @@ decompLUP {m,n} mat with (viewShape mat)
 
 
 export
-detWithLUP : (Ord a, Abs a, Neg a, Fractional a) =>
-            (mat : Matrix' n a) -> DecompLUP mat -> a
-detWithLUP {n} mat lup =
+detWithLUP : Scalar a => (mat : Matrix' n a) -> DecompLUP mat -> a
+detWithLUP  mat lup =
   (if numSwaps lup `mod` 2 == 0 then 1 else -1)
     * product (diagonal lup.lu)
 
 export
-det : (Ord a, Abs a, Neg a, Fractional a) => Matrix' n a -> a
+det : Scalar a => Matrix' n a -> a
 det {n} mat with (viewShape mat)
   det {n=0} mat | Shape [0,0] = 1
   det {n=1} mat | Shape [1,1] = mat!![0,0]
   det {n=2} mat | Shape [2,2] = let [a,b,c,d] = elements mat in a*d - b*c
   _ | Shape [n,n] = detWithLUP mat (decompLUP mat)
+
+
+solveWithLUP : Scalar a => (mat : Matrix m n a) -> DecompLUP mat ->
+                Vector m a -> Maybe (Vector n a)
+solveWithLUP mat lup b = ?h

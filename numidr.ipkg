@@ -17,7 +17,7 @@ modules = Data.NP,
           Data.NumIdr.Array.Order,
           Data.NumIdr.Homogeneous,
           Data.NumIdr.Matrix,
-          Data.NumIdr.Multiply,
+          Data.NumIdr.Interfaces,
           Data.NumIdr.PrimArray,
           Data.NumIdr.Scalar,
           Data.NumIdr.Vector

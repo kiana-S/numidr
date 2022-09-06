@@ -1,7 +1,7 @@
 module Data.NumIdr.Homogeneous
 
 import Data.Vect
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 import Data.NumIdr.Vector
 import Data.NumIdr.Matrix
 

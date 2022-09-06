@@ -6,7 +6,7 @@ import Data.Vect
 import Data.Zippable
 import Data.NP
 import Data.Permutation
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 import Data.NumIdr.PrimArray
 import Data.NumIdr.Array.Order
 import Data.NumIdr.Array.Coords
