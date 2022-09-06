@@ -225,28 +225,51 @@ export
 
 -- LU Decomposition
 export
-record DecompLU {0 n,a : _} (mat : Matrix' n a) where
+record DecompLU {0 m,n,a : _} (mat : Matrix m n a) where
   constructor MkLU
-  lu : Matrix' n a
+  lu : Matrix m n a
 
 
 namespace DecompLU
   export
-  lower : Num a => DecompLU {n,a} mat -> Matrix' n a
+  lower : Num a => DecompLU {m,n,a} mat -> Matrix m (minimum m n) a
   lower (MkLU lu) with (viewShape lu)
-    _ | Shape [n,n] = lowerTriangleStrict lu + identity
+    _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
+      case compare i j of
+        LT => 0
+        EQ => 1
+        GT => lu!#[i,j])
 
   export %inline
-  (.lower) : Num a => DecompLU {n,a} mat -> Matrix' n a
+  (.lower) : Num a => DecompLU {m,n,a} mat -> Matrix m (minimum m n) a
   (.lower) = lower
 
   export
-  upper : Num a => DecompLU {n,a} mat -> Matrix' n a
-  upper (MkLU lu) = upperTriangle lu
+  upper : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
+  upper (MkLU lu) with (viewShape lu)
+    _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
+      if i <= j then lu!#[i,j] else 0)
 
   export %inline
-  (.upper) : Num a => DecompLU {n,a} mat -> Matrix' n a
+  (.upper) : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
   (.upper) = upper
+
+
+minWeakenLeft : {m,n : _} -> Fin (minimum m n) -> Fin m
+minWeakenLeft x = weakenLTE x $ minLTE m n
+  where
+    minLTE : (m,n : _) -> minimum m n `LTE` m
+    minLTE Z n = LTEZero
+    minLTE (S m) Z = LTEZero
+    minLTE (S m) (S n) = LTESucc (minLTE m n)
+
+minWeakenRight : {m,n : _} -> Fin (minimum m n) -> Fin n
+minWeakenRight x = weakenLTE x $ minLTE m n
+  where
+    minLTE : (m,n : _) -> minimum m n `LTE` n
+    minLTE Z n = LTEZero
+    minLTE (S m) Z = LTEZero
+    minLTE (S m) (S n) = LTESucc (minLTE m n)
 
 
 iterateN : (n : Nat) -> (Fin n -> a -> a) -> a -> a
@@ -255,60 +278,73 @@ iterateN 1 f x = f FZ x
 iterateN (S n@(S _)) f x = iterateN n (f . FS) $ f FZ x
 
 
-gaussStep : (Eq a, Neg a, Fractional a) => Fin n -> Matrix' n a -> Matrix' n a
-gaussStep {n} i lu with (viewShape lu)
-  _ | Shape [n,n] =
-    if all (==0) $ getColumn i lu then lu else
-      let diag = lu!![i,i]
-          coeffs = map (/diag) $ lu!!..[StartBound (FS i), One i]
-          lu' = indexSetRange [StartBound (FS i), One i]
+gaussStep : {m,n : _} -> (Eq a, Neg a, Fractional a) =>
+            Fin (minimum m n) -> Matrix m n a -> Matrix m n a
+gaussStep i lu =
+    if all (==0) $ getColumn (minWeakenRight i) lu then lu else
+      let ir = minWeakenLeft i
+          ic = minWeakenRight i
+          diag = lu!![ir,ic]
+          coeffs = map (/diag) $ lu!!..[StartBound (FS ir), One ic]
+          lu' = indexSetRange [StartBound (FS ir), One ic]
                   coeffs lu
-          pivot = lu!!..[One i, StartBound (FS i)]
-          offsets = negate $ outer coeffs pivot
-      in  indexUpdateRange [StartBound (FS i), StartBound (FS i)] (+offsets) lu'
+          pivot = lu!!..[One ir, StartBound (FS ic)]
+          offsets = outer coeffs pivot
+      in  indexUpdateRange [StartBound (FS ir), StartBound (FS ic)]
+            (flip (-) offsets) lu'
 
 export
-decompLU : (Eq a, Neg a, Fractional a) => (mat : Matrix' n a) -> DecompLU mat
-decompLU {n} mat with (viewShape mat)
-  _ | Shape [n,n] = MkLU $ iterateN n gaussStep mat
+decompLU : (Eq a, Neg a, Fractional a) => (mat : Matrix m n a) -> Maybe (DecompLU mat)
+decompLU mat with (viewShape mat)
+  _ | Shape [m,n] = map MkLU $ iterateN (minimum m n) (\i => (>>= gaussStepMaybe i)) (Just mat)
+  where
+    gaussStepMaybe : Fin (minimum m n) -> Matrix m n a -> Maybe (Matrix m n a)
+    gaussStepMaybe i mat = if mat!#[cast i,cast i] == 0 then Nothing
+                           else Just (gaussStep i mat)
 
 
 -- LUP Decomposition
 public export
-record DecompLUP {0 n,a : _} (mat : Matrix' n a) where
+record DecompLUP {0 m,n,a : _} (mat : Matrix m n a) where
   constructor MkLUP
-  lu : Matrix' n a
-  p : Permutation n
+  lu : Matrix m n a
+  p : Permutation m
   sw : Nat
 
 namespace DecompLUP
   export
-  lower : Num a => DecompLUP {n,a} mat -> Matrix' n a
-  lower (MkLUP lu p sw) with (viewShape lu)
-    _ | Shape [n,n] = lowerTriangleStrict lu + identity
+  lower : Num a => DecompLUP {m,n,a} mat -> Matrix m (minimum m n) a
+  lower (MkLUP lu _ _) with (viewShape lu)
+    _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
+      case compare i j of
+        LT => 0
+        EQ => 1
+        GT => lu!#[i,j])
 
   export %inline
-  (.lower) : Num a => DecompLUP {n,a} mat -> Matrix' n a
+  (.lower) : Num a => DecompLUP {m,n,a} mat -> Matrix m (minimum m n) a
   (.lower) = lower
 
   export
-  upper : Num a => DecompLUP {n,a} mat -> Matrix' n a
-  upper (MkLUP lu p sw) = upperTriangle lu
+  upper : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
+  upper (MkLUP lu _ _) with (viewShape lu)
+    _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
+      if i <= j then lu!#[i,j] else 0)
 
   export %inline
-  (.upper) : Num a => DecompLUP {n,a} mat -> Matrix' n a
+  (.upper) : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
   (.upper) = upper
 
   export
-  permute : DecompLUP {n} mat -> Permutation n
+  permute : DecompLUP {m} mat -> Permutation m
   permute (MkLUP lu p sw) = p
 
   export %inline
-  (.permute) : DecompLUP {n} mat -> Permutation n
+  (.permute) : DecompLUP {m} mat -> Permutation m
   (.permute) = permute
 
   export
-  numSwaps : DecompLUP {n} mat -> Nat
+  numSwaps : DecompLUP mat -> Nat
   numSwaps (MkLUP lu p sw) = sw
 
 export
@@ -318,11 +354,12 @@ fromLU (MkLU lu) = MkLUP lu identity 0
 
 export
 decompLUP : (Ord a, Abs a, Neg a, Fractional a) =>
-            (mat : Matrix' n a) -> DecompLUP mat
-decompLUP {n} mat with (viewShape mat)
-  decompLUP {n=0} mat | Shape [0,0] = MkLUP mat identity 0
-  decompLUP {n=S n} mat | Shape [S n,S n] =
-    iterateN (S n) gaussStepSwap (MkLUP mat identity 0)
+            (mat : Matrix m n a) -> DecompLUP mat
+decompLUP {m,n} mat with (viewShape mat)
+  decompLUP {m=0,n} mat | Shape [0,n] = MkLUP mat identity 0
+  decompLUP {m=S m,n=0} mat | Shape [S m,0] = MkLUP mat identity 0
+  decompLUP {m=S m,n=S n} mat | Shape [S m,S n] =
+    iterateN (minimum (S m) (S n)) gaussStepSwap (MkLUP mat identity 0)
   where
     maxIndex : (s,a) -> List (s,a) -> (s,a)
     maxIndex x [] = x
@@ -331,13 +368,15 @@ decompLUP {n} mat with (viewShape mat)
       if abs b < abs d then assert_total $ maxIndex x ((c,d)::xs)
                        else assert_total $ maxIndex x ((a,b)::xs)
 
-    gaussStepSwap : Fin (S n) -> DecompLUP mat -> DecompLUP mat
+    gaussStepSwap : Fin (minimum (S m) (S n)) -> DecompLUP mat -> DecompLUP mat
     gaussStepSwap i (MkLUP lu p sw) =
-      let (maxi, maxv) = mapFst head
+      let ir = minWeakenLeft {n=S n} i
+          ic = minWeakenRight {m=S m} i
+          (maxi, maxv) = mapFst head
                            (maxIndex ([0],0) $ enumerate $
-                           indexSetRange [EndBound (weaken i)] 0 $ getColumn i lu)
-      in  if maxi == i then MkLUP (gaussStep i lu) p sw
-          else MkLUP (gaussStep i $ swapRows maxi i lu) (appendSwap maxi i p) (S sw)
+                           indexSetRange [EndBound (weaken ir)] 0 $ getColumn ic lu)
+      in  if maxi == ir then MkLUP (gaussStep i lu) p sw
+          else MkLUP (gaussStep i $ swapRows maxi ir lu) (appendSwap maxi ir p) (S sw)
 
 
 --------------------------------------------------------------------------------
