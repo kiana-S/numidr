@@ -245,6 +245,15 @@ namespace DecompLU
   (.lower) = lower
 
   export
+  lower' : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
+  lower' lu = rewrite cong (\i => Matrix n i a) $ sym (minimumIdempotent n)
+              in lower lu
+
+  export %inline
+  (.lower') : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
+  (.lower') = lower'
+
+  export
   upper : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
   upper (MkLU lu) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
@@ -253,6 +262,15 @@ namespace DecompLU
   export %inline
   (.upper) : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
   (.upper) = upper
+
+  export
+  upper' : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
+  upper' lu = rewrite cong (\i => Matrix i n a) $ sym (minimumIdempotent n)
+              in upper lu
+
+  export %inline
+  (.upper') : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
+  (.upper') = upper'
 
 
 minWeakenLeft : {m,n : _} -> Fin (minimum m n) -> Fin m
@@ -304,7 +322,7 @@ decompLU mat with (viewShape mat)
 
 
 -- LUP Decomposition
-public export
+export
 record DecompLUP {0 m,n,a : _} (mat : Matrix m n a) where
   constructor MkLUP
   lu : Matrix m n a
@@ -326,6 +344,15 @@ namespace DecompLUP
   (.lower) = lower
 
   export
+  lower' : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
+  lower' lu = rewrite cong (\i => Matrix n i a) $ sym (minimumIdempotent n)
+              in lower lu
+
+  export %inline
+  (.lower') : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
+  (.lower') = lower'
+
+  export
   upper : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
   upper (MkLUP lu _ _) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
@@ -334,6 +361,15 @@ namespace DecompLUP
   export %inline
   (.upper) : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
   (.upper) = upper
+
+  export
+  upper' : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
+  upper' lu = rewrite cong (\i => Matrix i n a) $ sym (minimumIdempotent n)
+              in upper lu
+
+  export %inline
+  (.upper') : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
+  (.upper') = upper'
 
   export
   permute : DecompLUP {m} mat -> Permutation m
@@ -384,8 +420,8 @@ decompLUP {m,n} mat with (viewShape mat)
 
 
 export
-detWithLUP : Scalar a => (mat : Matrix' n a) -> DecompLUP mat -> a
-detWithLUP  mat lup =
+detWithLUP : Num a => (mat : Matrix' n a) -> DecompLUP mat -> a
+detWithLUP mat lup =
   (if numSwaps lup `mod` 2 == 0 then 1 else -1)
     * product (diagonal lup.lu)
 
@@ -398,6 +434,50 @@ det {n} mat with (viewShape mat)
   _ | Shape [n,n] = detWithLUP mat (decompLUP mat)
 
 
-solveWithLUP : Scalar a => (mat : Matrix m n a) -> DecompLUP mat ->
-                Vector m a -> Maybe (Vector n a)
-solveWithLUP mat lup b = ?h
+--------------------------------------------------------------------------------
+-- Solving matrix equations
+--------------------------------------------------------------------------------
+
+
+export
+solveLowerTri : Field a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
+solveLowerTri mat b with (viewShape b)
+  _ | Shape [n] =
+    if all (/=0) (diagonal mat)
+    then Just $ vector $ reverse $ construct $ reverse $ toVect b
+    else Nothing
+  where
+    construct : {i : _} -> Vect i a -> Vect i a
+    construct [] = []
+    construct {i=S i} (b :: bs) =
+      let xs = construct bs
+          i' = assert_total $ case natToFin i n of Just i' => i'
+      in (b - sum (zipWith (*) xs (reverse $ toVect $ believe_me $
+                  mat !!.. [One i', EndBound (weaken i')]))) / mat!#[i,i] :: xs
+
+export
+solveUpperTri : Field a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
+solveUpperTri mat b with (viewShape b)
+  _ | Shape [n] =
+    if all (/=0) (diagonal mat)
+    then Just $ vector $ construct Z $ toVect b
+    else Nothing
+  where
+    construct : Nat -> Vect i a -> Vect i a
+    construct _ [] = []
+    construct i (b :: bs) =
+      let xs = construct (S i) bs
+          i' = assert_total $ case natToFin i n of Just i' => i'
+      in (b - sum (zipWith (*) xs (toVect $ believe_me $
+                  mat !!.. [One i', StartBound (FS i')]))) / mat!#[i,i] :: xs
+
+export
+solveWithLUP : Field a => (mat : Matrix' n a) -> DecompLUP mat ->
+                Vector n a -> Maybe (Vector n a)
+solveWithLUP mat lup b =
+  let b' = permuteCoords (inverse lup.permute) b
+  in solveLowerTri lup.lower' b' >>= solveUpperTri lup.upper'
+
+export
+solve : Scalar a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
+solve mat = solveWithLUP mat (decompLUP mat)
