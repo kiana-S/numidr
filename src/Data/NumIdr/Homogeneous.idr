@@ -67,7 +67,7 @@ fromHomogeneous = vector . init . toVect
 
 export
 hmatrix : Num a => Matrix m n a -> Vector m a -> HMatrix m n a
-hmatrix mat tr with (viewShape mat)
+hmatrix {m,n} mat tr with (viewShape mat)
   _ | Shape [m,n] = indexSet [last,last] 1 $
                     resize [S m, S n] 0 $
                     mat `hconcat` reshape
@@ -75,20 +75,20 @@ hmatrix mat tr with (viewShape mat)
 
 export
 matrixToH : Num a => Matrix m n a -> HMatrix m n a
-matrixToH mat with (viewShape mat)
+matrixToH {m,n} mat with (viewShape mat)
   _ | Shape [m,n] = indexSet [last,last] 1 $ resize [S m, S n] 0 mat
 
 
 
 export
 getMatrix : HMatrix m n a -> Matrix m n a
-getMatrix mat with (viewShape mat)
+getMatrix {m,n} mat with (viewShape mat)
   _ | Shape [S m, S n] = resizeLTE [m,n] mat
                           {ok = [lteSuccRight reflexive,lteSuccRight reflexive]}
 
 export
 getTranslationVector : HMatrix m n a -> Vector m a
-getTranslationVector mat with (viewShape mat)
+getTranslationVector {m,n} mat with (viewShape mat)
   _ | Shape [S m, S n] = resizeLTE [m] {ok = [lteSuccRight reflexive]} $
                           getColumn last mat
 

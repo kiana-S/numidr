@@ -107,12 +107,12 @@ getColumn c mat = rewrite sym (rangeLenZ m) in mat!!..[All, One c]
 
 export
 diagonal' : Matrix m n a -> Vector (minimum m n) a
-diagonal' mat with (viewShape mat)
+diagonal' {m,n} mat with (viewShape mat)
   _ | Shape [m,n] = fromFunctionNB _ (\[i] => mat!#[i,i])
 
 export
 diagonal : Matrix' n a -> Vector n a
-diagonal mat with (viewShape mat)
+diagonal {n} mat with (viewShape mat)
   _ | Shape [n,n] = fromFunctionNB [n] (\[i] => mat!#[i,i])
 
 
@@ -123,7 +123,7 @@ minor i j mat = believe_me $ mat!!..[Filter (/=i), Filter (/=j)]
 
 
 filterInd : Num a => (Nat -> Nat -> Bool) -> Matrix m n a -> Matrix m n a
-filterInd p mat with (viewShape mat)
+filterInd {m,n} p mat with (viewShape mat)
   _ | Shape [m,n] = fromFunctionNB [m,n] (\[i,j] => if p i j then mat!#[i,j] else 0)
 
 export
@@ -187,7 +187,7 @@ permuteColumns = permuteInAxis 1
 ||| Calculate the outer product of two vectors as a matrix.
 export
 outer : Num a => Vector m a -> Vector n a -> Matrix m n a
-outer a b with (viewShape a, viewShape b)
+outer {m,n} a b with (viewShape a, viewShape b)
   _ | (Shape [m], Shape [n]) = fromFunction [m,n] (\[i,j] => a!!i * b!!j)
 
 
@@ -203,13 +203,13 @@ trace = sum . diagonal'
 
 export
 Num a => Mult (Matrix m n a) (Vector n a) (Vector m a) where
-  mat *. v with (viewShape mat)
+  (*.) {m,n} mat v with (viewShape mat)
     _ | Shape [m,n] = fromFunction [m]
       (\[i] => sum $ map (\j => mat!![i,j] * v!!j) range)
 
 export
 Num a => Mult (Matrix m n a) (Matrix n p a) (Matrix m p a) where
-  m1 *. m2 with (viewShape m1, viewShape m2)
+  (*.) {m,n,p} m1 m2 with (viewShape m1, viewShape m2)
     _ | (Shape [m,n], Shape [n,p]) = fromFunction [m,p]
       (\[i,j] => sum $ map (\k => m1!![i,k] * m2!![k,j]) range)
 
@@ -233,7 +233,7 @@ record DecompLU {0 m,n,a : _} (mat : Matrix m n a) where
 namespace DecompLU
   export
   lower : Num a => DecompLU {m,n,a} mat -> Matrix m (minimum m n) a
-  lower (MkLU lu) with (viewShape lu)
+  lower {m,n} (MkLU lu) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
       case compare i j of
         LT => 0
@@ -255,7 +255,7 @@ namespace DecompLU
 
   export
   upper : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
-  upper (MkLU lu) with (viewShape lu)
+  upper {m,n} (MkLU lu) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
       if i <= j then lu!#[i,j] else 0)
 
@@ -313,7 +313,7 @@ gaussStep i lu =
 
 export
 decompLU : Field a => (mat : Matrix m n a) -> Maybe (DecompLU mat)
-decompLU mat with (viewShape mat)
+decompLU {m,n} mat with (viewShape mat)
   _ | Shape [m,n] = map MkLU $ iterateN (minimum m n) (\i => (>>= gaussStepMaybe i)) (Just mat)
   where
     gaussStepMaybe : Fin (minimum m n) -> Matrix m n a -> Maybe (Matrix m n a)
@@ -332,7 +332,7 @@ record DecompLUP {0 m,n,a : _} (mat : Matrix m n a) where
 namespace DecompLUP
   export
   lower : Num a => DecompLUP {m,n,a} mat -> Matrix m (minimum m n) a
-  lower (MkLUP lu _ _) with (viewShape lu)
+  lower {m,n} (MkLUP lu _ _) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
       case compare i j of
         LT => 0
@@ -354,7 +354,7 @@ namespace DecompLUP
 
   export
   upper : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
-  upper (MkLUP lu _ _) with (viewShape lu)
+  upper {m,n} (MkLUP lu _ _) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
       if i <= j then lu!#[i,j] else 0)
 
@@ -389,7 +389,7 @@ fromLU (MkLU lu) = MkLUP lu identity 0
 
 
 export
-decompLUP : Scalar a => (mat : Matrix m n a) -> DecompLUP mat
+decompLUP : FieldCmp a => (mat : Matrix m n a) -> DecompLUP mat
 decompLUP {m,n} mat with (viewShape mat)
   decompLUP {m=0,n} mat | Shape [0,n] = MkLUP mat identity 0
   decompLUP {m=S m,n=0} mat | Shape [S m,0] = MkLUP mat identity 0
@@ -426,7 +426,7 @@ detWithLUP mat lup =
     * product (diagonal lup.lu)
 
 export
-det : Scalar a => Matrix' n a -> a
+det : FieldCmp a => Matrix' n a -> a
 det {n} mat with (viewShape mat)
   det {n=0} mat | Shape [0,0] = 1
   det {n=1} mat | Shape [1,1] = mat!![0,0]
@@ -441,7 +441,7 @@ det {n} mat with (viewShape mat)
 
 export
 solveLowerTri : Field a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
-solveLowerTri mat b with (viewShape b)
+solveLowerTri {n} mat b with (viewShape b)
   _ | Shape [n] =
     if all (/=0) (diagonal mat)
     then Just $ vector $ reverse $ construct $ reverse $ toVect b
@@ -457,7 +457,7 @@ solveLowerTri mat b with (viewShape b)
 
 export
 solveUpperTri : Field a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
-solveUpperTri mat b with (viewShape b)
+solveUpperTri {n} mat b with (viewShape b)
   _ | Shape [n] =
     if all (/=0) (diagonal mat)
     then Just $ vector $ construct Z $ toVect b
@@ -479,5 +479,5 @@ solveWithLUP mat lup b =
   in solveLowerTri lup.lower' b' >>= solveUpperTri lup.upper'
 
 export
-solve : Scalar a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
+solve : FieldCmp a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
 solve mat = solveWithLUP mat (decompLUP mat)

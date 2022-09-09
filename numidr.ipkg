@@ -4,7 +4,7 @@ version = 0.1.0
 authors = "Kiana Sheibani"
 license = "MIT"
 
-langversion >= 0.4.0
+langversion >= 0.5.1
 
 sourcedir = "src"
 readme = "README.md"

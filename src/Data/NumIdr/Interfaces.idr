@@ -14,12 +14,12 @@ Field a = (Eq a, Neg a, Fractional a)
 
 
 public export
-interface (Eq a, Neg a, Fractional a) => Scalar a where
+interface (Eq a, Neg a, Fractional a) => FieldCmp a where
   abscmp : a -> a -> Ordering
 
 
 export
-(Ord a, Abs a, Neg a, Fractional a) => Scalar a where
+(Ord a, Abs a, Neg a, Fractional a) => FieldCmp a where
   abscmp x y = compare (abs x) (abs y)
 
 

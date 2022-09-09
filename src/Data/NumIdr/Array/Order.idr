@@ -27,12 +27,6 @@ Eq Order where
   FOrder == COrder = False
 
 
-scanr : (el -> res -> res) -> res -> Vect len el -> Vect (S len) res
-scanr _ q0 []      = [q0]
-scanr f q0 (x::xs) = f x (head qs) :: qs
-  where qs : Vect len res
-        qs = scanr f q0 xs
-
 ||| Calculate an array's strides given its order and shape.
 export
 calcStrides : Order -> Vect rk Nat -> Vect rk Nat

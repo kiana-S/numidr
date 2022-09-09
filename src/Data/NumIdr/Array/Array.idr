@@ -280,7 +280,7 @@ indexSet is = indexUpdate is . const
 ||| Index the array using the given range of coordinates, returning a new array.
 export
 indexRange : (rs : CoordsRange s) -> Array s a -> Array (newShape rs) a
-indexRange rs arr with (viewShape arr)
+indexRange {s} rs arr with (viewShape arr)
   _ | Shape s =
     let ord = getOrder arr
         sts = calcStrides ord s'
@@ -350,7 +350,7 @@ indexSetNB is = indexUpdateNB is . const
 
 export
 indexRangeNB : (rs : Vect rk CRangeNB) -> Array s a -> Array (newShape s rs) a
-indexRangeNB rs arr with (viewShape arr)
+indexRangeNB {s} rs arr with (viewShape arr)
   _ | Shape s =
     let ord = getOrder arr
         sts = calcStrides ord s'
@@ -403,7 +403,7 @@ reshape s' arr = reshape' s' (getOrder arr) arr
 ||| Change the internal order of the array's elements.
 export
 reorder : Order -> Array s a -> Array s a
-reorder ord' arr with (viewShape arr)
+reorder {s} ord' arr with (viewShape arr)
   _ | Shape s = let sts = calcStrides ord' s
                 in  MkArray ord' sts _ (unsafeFromIns (product s) $
                       map (\is => (getLocation' sts is, index (getLocation' (strides arr) is) (getPrim arr))) $
@@ -450,7 +450,7 @@ enumerateNB (MkArray _ sts sh p) =
 ||| List all of the values in an array along with their coordinates.
 export
 enumerate : Array s a -> List (Coords s, a)
-enumerate arr with (viewShape arr)
+enumerate {s} arr with (viewShape arr)
   _ | Shape s = map (\is => (is, index is arr)) (getAllCoords s)
 
 
@@ -487,7 +487,7 @@ stack axis arrs = rewrite sym (lengthCorrect arrs) in
 
 export
 transpose : Array s a -> Array (reverse s) a
-transpose arr with (viewShape arr)
+transpose {s} arr with (viewShape arr)
   _ | Shape s = fromFunctionNB (reverse s) (\is => arr !# reverse is)
 
 export
@@ -497,22 +497,22 @@ export
 
 export
 swapAxes : (i,j : Fin rk) -> Array s a -> Array (swapElems i j s) a
-swapAxes i j arr with (viewShape arr)
+swapAxes {s} i j arr with (viewShape arr)
   _ | Shape s = fromFunctionNB _ (\is => arr !# swapElems i j is)
 
 export
 permuteAxes : (p : Permutation rk) -> Array s a -> Array (permuteVect p s) a
-permuteAxes p arr with (viewShape arr)
+permuteAxes {s} p arr with (viewShape arr)
   _ | Shape s = fromFunctionNB _ (\is => arr !# permuteVect p s)
 
 export
 swapInAxis : (ax : Fin rk) -> (i,j : Fin (index ax s)) -> Array s a -> Array s a
-swapInAxis ax i j arr with (viewShape arr)
+swapInAxis {s} ax i j arr with (viewShape arr)
   _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt ax (swapValues i j) is)
 
 export
 permuteInAxis : (ax : Fin rk) -> Permutation (index ax s) -> Array s a -> Array s a
-permuteInAxis ax p arr with (viewShape arr)
+permuteInAxis {s} ax p arr with (viewShape arr)
   _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt ax (permuteValues p) is)
 
 
@@ -528,25 +528,25 @@ permuteInAxis ax p arr with (viewShape arr)
 
 export
 Zippable (Array s) where
-  zipWith f a b with (viewShape a)
+  zipWith {s} f a b with (viewShape a)
     _ | Shape s = MkArray (getOrder a) (strides a) s $
                     if getOrder a == getOrder b
                       then unsafeZipWith f (getPrim a) (getPrim b)
                       else unsafeZipWith f (getPrim a) (getPrim $ reorder (getOrder a) b)
 
-  zipWith3 f a b c with (viewShape a)
+  zipWith3 {s} f a b c with (viewShape a)
     _ | Shape s = MkArray (getOrder a) (strides a) s $
                     if (getOrder a == getOrder b) && (getOrder b == getOrder c)
                         then unsafeZipWith3 f (getPrim a) (getPrim b) (getPrim c)
                         else unsafeZipWith3 f (getPrim a) (getPrim $ reorder (getOrder a) b)
                                                           (getPrim $ reorder (getOrder a) c)
 
-  unzipWith f arr with (viewShape arr)
+  unzipWith {s} f arr with (viewShape arr)
     _ | Shape s = case unzipWith f (getPrim arr) of
                     (a, b) => (MkArray (getOrder arr) (strides arr) s a,
                                MkArray (getOrder arr) (strides arr) s b)
 
-  unzipWith3 f arr with (viewShape arr)
+  unzipWith3 {s} f arr with (viewShape arr)
     _ | Shape s = case unzipWith3 f (getPrim arr) of
                     (a, b, c) => (MkArray (getOrder arr) (strides arr) s a,
                                   MkArray (getOrder arr) (strides arr) s b,
