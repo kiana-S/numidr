@@ -102,10 +102,13 @@ shapeEq : (arr : Array s a) -> s = shape arr
 shapeEq (MkArray _ _ _ _) = Refl
 
 
+||| A view for extracting the shape of an array.
 public export
 data ShapeView : Array s a -> Type where
   Shape : (s : Vect rk Nat) -> {0 arr : Array s a} -> ShapeView arr
 
+||| The covering function for the view `ShapeView`. This function takes an array
+||| of type `Array s a` and returns `Shape s`.
 export
 viewShape : (arr : Array s a) -> ShapeView arr
 viewShape arr = rewrite shapeEq arr in
@@ -134,11 +137,16 @@ export
 repeat : (s : Vect rk Nat) -> a -> Array s a
 repeat s = repeat' s COrder
 
-
+||| Create an array filled with zeros.
+|||
+||| @ s The shape of the constructed array
 export
 zeros : Num a => (s : Vect rk Nat) -> Array s a
 zeros s = repeat s 0
 
+||| Create an array filled with ones.
+|||
+||| @ s The shape of the constructed array
 export
 ones : Num a => (s : Vect rk Nat) -> Array s a
 ones s = repeat s 1
@@ -265,13 +273,13 @@ arr !! is = index is arr
 
 -- TODO: Create set/update at index functions
 
-||| Update the value at the given coordinates using the function.
+||| Update the entry at the given coordinates using the function.
 export
 indexUpdate : Coords s -> (a -> a) -> Array s a -> Array s a
 indexUpdate is f (MkArray ord sts s arr) =
   MkArray ord sts s (updateAt (getLocation sts is) f arr)
 
-||| Set the value at the given coordinates to the given value.
+||| Set the entry at the given coordinates to the given value.
 export
 indexSet : Coords s -> a -> Array s a -> Array s a
 indexSet is = indexUpdate is . const
@@ -299,6 +307,7 @@ export %inline
 (!!..) : Array s a -> (rs : CoordsRange s) -> Array (newShape rs) a
 arr !!.. rs = indexRange rs arr
 
+||| Set the sub-array at the given range of coordinates to the given array.
 export
 indexSetRange : (rs : CoordsRange s) -> Array (newShape rs) a ->
                   Array s a -> Array s a
@@ -311,6 +320,8 @@ indexSetRange rs rpl (MkArray ord sts s arr) =
     pure arr')
 
 
+||| Update the sub-array at the given range of coordinates by applying
+||| a function to it.
 export
 indexUpdateRange : (rs : CoordsRange s) ->
                     (Array (newShape rs) a -> Array (newShape rs) a) ->
@@ -334,20 +345,22 @@ export %inline
 (!?) : Array {rk} s a -> Vect rk Nat -> Maybe a
 arr !? is = indexNB is arr
 
-||| Update the value at the given coordinates using the function. The array is
+||| Update the entry at the given coordinates using the function. The array is
 ||| returned unchanged if the coordinate is out of bounds.
 export
 indexUpdateNB : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
 indexUpdateNB is f (MkArray ord sts s arr) =
   MkArray ord sts s (updateAt (getLocation' sts is) f arr)
 
-||| Set the value at the given coordinates to the given value. The array is
+||| Set the entry at the given coordinates to the given value. The array is
 ||| returned unchanged if the coordinate is out of bounds.
 export
 indexSetNB : Vect rk Nat -> a -> Array {rk} s a -> Array s a
 indexSetNB is = indexUpdateNB is . const
 
 
+||| Index the array using the given range of coordinates, returning a new array.
+||| Entries outside of the array's bounds are not included.
 export
 indexRangeNB : (rs : Vect rk CRangeNB) -> Array s a -> Array (newShape s rs) a
 indexRangeNB {s} rs arr with (viewShape arr)
@@ -362,15 +375,27 @@ indexRangeNB {s} rs arr with (viewShape arr)
   where s' : Vect ? Nat
         s' = newShape s rs
 
+||| Index the array using the given range of coordinates, returning a new array.
+||| Entries outside of the array's bounds are not included.
+|||
+||| This is the operator form of `indexRangeNB`.
 export %inline
 (!?..) : Array s a -> (rs : Vect rk CRangeNB) -> Array (newShape s rs) a
 arr !?.. rs = indexRangeNB rs arr
 
 
+||| Index the array using the given coordinates.
+||| WARNING: This function does not perform any bounds check on its inputs.
+||| Misuse of this function can easily break memory safety.
 export
 indexUnsafe : Vect rk Nat -> Array {rk} s a -> a
 indexUnsafe is arr = index (getLocation' (strides arr) is) (getPrim arr)
 
+||| Index the array using the given coordinates.
+||| WARNING: This function does not perform any bounds check on its inputs.
+||| Misuse of this function can easily break memory safety.
+|||
+||| This is the operator form of `indexUnsafe`.
 export %inline
 (!#) : Array {rk} s a -> Vect rk Nat -> a
 arr !# is = indexUnsafe is arr
@@ -455,7 +480,8 @@ enumerate {s} arr with (viewShape arr)
 
 
 ||| Join two arrays along a particular axis, e.g. combining two matrices
-||| vertically or horizontally. The arrays must have the same shape on all other axes.
+||| vertically or horizontally. All other axes of the arrays must have the
+||| same dimensions.
 |||
 ||| @ axis The axis to join the arrays on
 export
@@ -485,35 +511,51 @@ stack axis arrs = rewrite sym (lengthCorrect arrs) in
     getAxisInd FZ (i :: is) = (i, is)
     getAxisInd {s=_::_} (FS ax) (i :: is) = mapSnd (i::) (getAxisInd ax is)
 
+
+||| Construct the transpose of an array by reversing the order of its axes.
 export
 transpose : Array s a -> Array (reverse s) a
 transpose {s} arr with (viewShape arr)
   _ | Shape s = fromFunctionNB (reverse s) (\is => arr !# reverse is)
 
+||| Construct the transpose of an array by reversing the order of its axes.
+|||
+||| This is the postfix form of `transpose`.
 export
 (.T) : Array s a -> Array (reverse s) a
 (.T) = transpose
 
 
+||| Swap two axes in an array.
 export
 swapAxes : (i,j : Fin rk) -> Array s a -> Array (swapElems i j s) a
 swapAxes {s} i j arr with (viewShape arr)
   _ | Shape s = fromFunctionNB _ (\is => arr !# swapElems i j is)
 
+||| Apply a permutation to the axes of an array.
 export
 permuteAxes : (p : Permutation rk) -> Array s a -> Array (permuteVect p s) a
 permuteAxes {s} p arr with (viewShape arr)
   _ | Shape s = fromFunctionNB _ (\is => arr !# permuteVect p s)
 
+||| Swap two coordinates along a specific axis (e.g. swapping two rows in a matrix).
+|||
+||| @ axis The axis to swap the coordinates along. Slices of the array
+||| perpendicular to this axis are taken when swapping.
 export
-swapInAxis : (ax : Fin rk) -> (i,j : Fin (index ax s)) -> Array s a -> Array s a
-swapInAxis {s} ax i j arr with (viewShape arr)
-  _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt ax (swapValues i j) is)
+swapInAxis : (axis : Fin rk) -> (i,j : Fin (index axis s)) -> Array s a -> Array s a
+swapInAxis {s} axis i j arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt axis (swapValues i j) is)
 
+||| Permute the coordinates along a specific axis (e.g. permuting the rows in
+||| a matrix).
+|||
+||| @ axis The axis to permute the coordinates along. Slices of the array
+||| perpendicular to this axis are taken when permuting.
 export
-permuteInAxis : (ax : Fin rk) -> Permutation (index ax s) -> Array s a -> Array s a
-permuteInAxis {s} ax p arr with (viewShape arr)
-  _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt ax (permuteValues p) is)
+permuteInAxis : (axis : Fin rk) -> Permutation (index axis s) -> Array s a -> Array s a
+permuteInAxis {s} axis p arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB _ (\is => arr !# updateAt axis (permuteValues p) is)
 
 
 --------------------------------------------------------------------------------

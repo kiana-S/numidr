@@ -167,6 +167,7 @@ namespace NB
   cRangeNBToList s (Indices xs) = filter (<s) xs
   cRangeNBToList s (Filter p) = filter p $ range 0 s
 
+  ||| Calculate the new shape given by a coordinate range.
   export
   newShape : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat
   newShape = zipWith (length .: cRangeNBToList)

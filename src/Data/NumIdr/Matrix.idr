@@ -61,9 +61,10 @@ fromDiag ds o = fromFunction [m,n] (\[i,j] => maybe o (`index` ds) $ i `eq` j)
     eq (FS _) FZ = Nothing
 
 
+||| Construct a permutation matrix based on the given permutation.
 export
-permutationMatrix : {n : _} -> Num a => Permutation n -> Matrix' n a
-permutationMatrix p = permuteInAxis 0 p (repeatDiag 1 0)
+permuteM : {n : _} -> Num a => Permutation n -> Matrix' n a
+permuteM p = permuteInAxis 0 p (repeatDiag 1 0)
 
 
 ||| Construct the matrix that scales a vector by the given value.
@@ -105,19 +106,23 @@ getColumn : Fin n -> Matrix m n a -> Vector m a
 getColumn c mat = rewrite sym (rangeLenZ m) in mat!!..[All, One c]
 
 
+||| Return the diagonal elements of the matrix as a vector.
 export
 diagonal' : Matrix m n a -> Vector (minimum m n) a
 diagonal' {m,n} mat with (viewShape mat)
   _ | Shape [m,n] = fromFunctionNB _ (\[i] => mat!#[i,i])
 
+||| Return the diagonal elements of the matrix as a vector.
 export
 diagonal : Matrix' n a -> Vector n a
 diagonal {n} mat with (viewShape mat)
   _ | Shape [n,n] = fromFunctionNB [n] (\[i] => mat!#[i,i])
 
 
--- TODO: throw an actual proof in here to avoid the unsafety
+||| Return a minor of the matrix, i.e. the matrix formed by removing a
+||| single row and column.
 export
+-- TODO: throw an actual proof in here to avoid the unsafety
 minor : Fin (S m) -> Fin (S n) -> Matrix (S m) (S n) a -> Matrix m n a
 minor i j mat = believe_me $ mat!!..[Filter (/=i), Filter (/=j)]
 
@@ -157,28 +162,33 @@ export
 hconcat : Matrix m n a -> Matrix m n' a -> Matrix m (n + n') a
 hconcat = concat 1
 
-
+||| Stack row vectors to form a matrix.
 export
 vstack : {n : _} -> Vect m (Vector n a) -> Matrix m n a
 vstack = stack 0
 
+||| Stack column vectors to form a matrix.
 export
 hstack : {m : _} -> Vect n (Vector m a) -> Matrix m n a
 hstack = stack 1
 
 
+||| Swap two rows of a matrix.
 export
 swapRows : (i,j : Fin m) -> Matrix m n a -> Matrix m n a
 swapRows = swapInAxis 0
 
+||| Swap two columns of a matrix.
 export
 swapColumns : (i,j : Fin n) -> Matrix m n a -> Matrix m n a
 swapColumns = swapInAxis 1
 
+||| Permute the rows of a matrix.
 export
 permuteRows : Permutation m -> Matrix m n a -> Matrix m n a
 permuteRows = permuteInAxis 0
 
+||| Permute the columns of a matrix.
 export
 permuteColumns : Permutation n -> Matrix m n a -> Matrix m n a
 permuteColumns = permuteInAxis 1
@@ -191,6 +201,7 @@ outer {m,n} a b with (viewShape a, viewShape b)
   _ | (Shape [m], Shape [n]) = fromFunction [m,n] (\[i,j] => a!!i * b!!j)
 
 
+||| Calculate the trace of a matrix, i.e. the sum of its diagonal elements.
 export
 trace : Num a => Matrix m n a -> a
 trace = sum . diagonal'
@@ -223,14 +234,20 @@ export
 --------------------------------------------------------------------------------
 
 
--- LU Decomposition
+||| The LU decomposition of a matrix.
+|||
+||| LU decomposition factors a matrix A into two matrices: a lower triangular
+||| matrix L, and an upper triangular matrix U, such that A = LU.
 export
 record DecompLU {0 m,n,a : _} (mat : Matrix m n a) where
   constructor MkLU
+  -- The lower and upper triangular matrix elements are stored
+  -- together for efficiency reasons
   lu : Matrix m n a
 
 
 namespace DecompLU
+  ||| The lower triangular matrix L of the LU decomposition.
   export
   lower : Num a => DecompLU {m,n,a} mat -> Matrix m (minimum m n) a
   lower {m,n} (MkLU lu) with (viewShape lu)
@@ -240,34 +257,49 @@ namespace DecompLU
         EQ => 1
         GT => lu!#[i,j])
 
+  ||| The lower triangular matrix L of the LU decomposition.
   export %inline
   (.lower) : Num a => DecompLU {m,n,a} mat -> Matrix m (minimum m n) a
   (.lower) = lower
 
+  ||| The lower triangular matrix L of the LU decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export
   lower' : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
   lower' lu = rewrite cong (\i => Matrix n i a) $ sym (minimumIdempotent n)
               in lower lu
 
+  ||| The lower triangular matrix L of the LU decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export %inline
   (.lower') : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
   (.lower') = lower'
 
+  ||| The upper triangular matrix U of the LU decomposition.
   export
   upper : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
   upper {m,n} (MkLU lu) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
       if i <= j then lu!#[i,j] else 0)
 
+  ||| The upper triangular matrix U of the LU decomposition.
   export %inline
   (.upper) : Num a => DecompLU {m,n,a} mat -> Matrix (minimum m n) n a
   (.upper) = upper
 
+  ||| The upper triangular matrix U of the LU decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export
   upper' : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
   upper' lu = rewrite cong (\i => Matrix i n a) $ sym (minimumIdempotent n)
               in upper lu
 
+  ||| The upper triangular matrix U of the LU decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export %inline
   (.upper') : Num a => {0 mat : Matrix' n a} -> DecompLU mat -> Matrix' n a
   (.upper') = upper'
@@ -296,6 +328,7 @@ iterateN 1 f x = f FZ x
 iterateN (S n@(S _)) f x = iterateN n (f . FS) $ f FZ x
 
 
+||| Perform a single step of Gaussian elimination on the `i`-th row and column.
 gaussStep : {m,n : _} -> Field a =>
             Fin (minimum m n) -> Matrix m n a -> Matrix m n a
 gaussStep i lu =
@@ -304,13 +337,14 @@ gaussStep i lu =
           ic = minWeakenRight i
           diag = lu!![ir,ic]
           coeffs = map (/diag) $ lu!!..[StartBound (FS ir), One ic]
-          lu' = indexSetRange [StartBound (FS ir), One ic]
-                  coeffs lu
+          lu' = indexSetRange [StartBound (FS ir), One ic] coeffs lu
           pivot = lu!!..[One ir, StartBound (FS ic)]
           offsets = outer coeffs pivot
       in  indexUpdateRange [StartBound (FS ir), StartBound (FS ic)]
             (flip (-) offsets) lu'
 
+||| Calculate the LU decomposition of a matrix, returning `Nothing` if one
+||| does not exist.
 export
 decompLU : Field a => (mat : Matrix m n a) -> Maybe (DecompLU mat)
 decompLU {m,n} mat with (viewShape mat)
@@ -321,7 +355,12 @@ decompLU {m,n} mat with (viewShape mat)
                            else Just (gaussStep i mat)
 
 
--- LUP Decomposition
+||| The LUP decomposition of a matrix.
+|||
+||| LUP decomposition is similar to LU decomposition, but the matrix may have
+||| its rows permuted before being factored. More formally, an LUP decomposition
+||| of a matrix A consists of a lower triangular matrix L, an upper triangular
+||| matrix U, and a permutation matrix P, such that PA = LU.
 export
 record DecompLUP {0 m,n,a : _} (mat : Matrix m n a) where
   constructor MkLUP
@@ -330,6 +369,7 @@ record DecompLUP {0 m,n,a : _} (mat : Matrix m n a) where
   sw : Nat
 
 namespace DecompLUP
+  ||| The lower triangular matrix L of the LUP decomposition.
   export
   lower : Num a => DecompLUP {m,n,a} mat -> Matrix m (minimum m n) a
   lower {m,n} (MkLUP lu _ _) with (viewShape lu)
@@ -339,55 +379,78 @@ namespace DecompLUP
         EQ => 1
         GT => lu!#[i,j])
 
+  ||| The lower triangular matrix L of the LUP decomposition.
   export %inline
   (.lower) : Num a => DecompLUP {m,n,a} mat -> Matrix m (minimum m n) a
   (.lower) = lower
 
+  ||| The lower triangular matrix L of the LUP decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export
   lower' : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
   lower' lu = rewrite cong (\i => Matrix n i a) $ sym (minimumIdempotent n)
               in lower lu
 
+  ||| The lower triangular matrix L of the LUP decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export %inline
   (.lower') : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
   (.lower') = lower'
 
+  ||| The upper triangular matrix U of the LUP decomposition.
   export
   upper : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
   upper {m,n} (MkLUP lu _ _) with (viewShape lu)
     _ | Shape [m,n] = fromFunctionNB _ (\[i,j] =>
       if i <= j then lu!#[i,j] else 0)
 
+  ||| The upper triangular matrix U of the LUP decomposition.
   export %inline
   (.upper) : Num a => DecompLUP {m,n,a} mat -> Matrix (minimum m n) n a
   (.upper) = upper
 
+  ||| The upper triangular matrix U of the LUP decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export
   upper' : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
   upper' lu = rewrite cong (\i => Matrix i n a) $ sym (minimumIdempotent n)
               in upper lu
 
+  ||| The upper triangular matrix U of the LUP decomposition.
+  |||
+  ||| This accessor is intended to be used for square matrix decompositions.
   export %inline
   (.upper') : Num a => {0 mat : Matrix' n a} -> DecompLUP mat -> Matrix' n a
   (.upper') = upper'
 
+  ||| The row permutation of the LUP decomposition.
   export
   permute : DecompLUP {m} mat -> Permutation m
   permute (MkLUP lu p sw) = p
 
+  ||| The row permutation of the LUP decomposition.
   export %inline
   (.permute) : DecompLUP {m} mat -> Permutation m
   (.permute) = permute
 
+  ||| The number of swaps in the permutation of the LUP decomposition.
+  |||
+  ||| This is stored along with the permutation in order to increase the
+  ||| efficiency of certain algorithms.
   export
   numSwaps : DecompLUP mat -> Nat
   numSwaps (MkLUP lu p sw) = sw
 
+
+||| Convert an LU decomposition into an LUP decomposition.
 export
 fromLU : DecompLU mat -> DecompLUP mat
 fromLU (MkLU lu) = MkLUP lu identity 0
 
-
+||| Calculate the LUP decomposition of a matrix.
 export
 decompLUP : FieldCmp a => (mat : Matrix m n a) -> DecompLUP mat
 decompLUP {m,n} mat with (viewShape mat)
@@ -400,8 +463,8 @@ decompLUP {m,n} mat with (viewShape mat)
     maxIndex x [] = x
     maxIndex _ [x] = x
     maxIndex x ((a,b)::(c,d)::xs) =
-      if abscmp b d == LT then assert_total $ maxIndex x ((c,d)::xs)
-                          else assert_total $ maxIndex x ((a,b)::xs)
+      if abslt b d then assert_total $ maxIndex x ((c,d)::xs)
+                   else assert_total $ maxIndex x ((a,b)::xs)
 
     gaussStepSwap : Fin (S $ minimum m n) -> DecompLUP mat -> DecompLUP mat
     gaussStepSwap i (MkLUP lu p sw) =
@@ -418,12 +481,14 @@ decompLUP {m,n} mat with (viewShape mat)
 --------------------------------------------------------------------------------
 
 
+||| Calculate the determinant of a matrix given its LUP decomposition.
 export
 detWithLUP : Num a => (mat : Matrix' n a) -> DecompLUP mat -> a
 detWithLUP mat lup =
   (if numSwaps lup `mod` 2 == 0 then 1 else -1)
     * product (diagonal lup.lu)
 
+||| Calculate the determinant of a matrix.
 export
 det : FieldCmp a => Matrix' n a -> a
 det {n} mat with (viewShape mat)
@@ -464,12 +529,16 @@ solveUpperTri' {n} mat b with (viewShape b)
                   mat !!.. [One i', StartBound (FS i')]))) / mat!#[i,i] :: xs
 
 
+||| Solve a linear equation, assuming the matrix is lower triangular.
+||| Any entries other than those below the diagonal are ignored.
 export
 solveLowerTri : Field a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
 solveLowerTri mat b = if all (/=0) (diagonal mat)
                       then Just $ solveLowerTri' mat b
                       else Nothing
 
+||| Solve a linear equation, assuming the matrix is upper triangular.
+||| Any entries other than those above the diagonal are ignored.
 export
 solveUpperTri : Field a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
 solveUpperTri mat b = if all (/=0) (diagonal mat)
@@ -483,19 +552,27 @@ solveWithLUP' mat lup b =
   let b' = permuteCoords (inverse lup.permute) b
   in solveUpperTri' lup.upper' $ solveLowerTri' lup.lower' b'
 
+||| Solve a linear equation, given a matrix and its LUP decomposition.
 export
 solveWithLUP : Field a => (mat : Matrix' n a) -> DecompLUP mat ->
                 Vector n a -> Maybe (Vector n a)
 solveWithLUP mat lup b =
   let b' = permuteCoords (inverse lup.permute) b
-  in solveLowerTri lup.lower' b' >>= solveUpperTri lup.upper'
+  in solveUpperTri lup.upper' $ solveLowerTri' lup.lower' b'
 
-
+||| Solve a linear equation given a matrix.
 export
 solve : FieldCmp a => Matrix' n a -> Vector n a -> Maybe (Vector n a)
 solve mat = solveWithLUP mat (decompLUP mat)
 
 
+--------------------------------------------------------------------------------
+-- Matrix inversion
+--------------------------------------------------------------------------------
+
+
+||| Try to invert a square matrix, returning `Nothing` if an inverse
+||| does not exist.
 export
 tryInverse : FieldCmp a => Matrix' n a -> Maybe (Matrix' n a)
 tryInverse {n} mat with (viewShape mat)

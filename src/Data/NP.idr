@@ -5,6 +5,7 @@ import Data.Vect
 %default total
 
 
+||| A type constructor for heterogenous lists.
 public export
 data NP : (f : k -> Type) -> (ts : Vect n k) -> Type where
   Nil  : NP {k} f []

@@ -14,7 +14,7 @@ Vector : Nat -> Type -> Type
 Vector n = Array [n]
 
 
-||| The length (number of dimensions) of the vector
+||| The length (number of dimensions) of the vector.
 public export
 dim : Vector n a -> Nat
 dim = head . shape
@@ -131,10 +131,12 @@ swizzle p v = rewrite sym (lengthCorrect p)
               )
 
 
+||| Swap two entries in a vector.
 export
 swapCoords : (i,j : Fin n) -> Vector n a -> Vector n a
 swapCoords = swapInAxis 0
 
+||| Permute the entries in a vector.
 export
 permuteCoords : Permutation n -> Vector n a -> Vector n a
 permuteCoords = permuteInAxis 0
