@@ -103,8 +103,9 @@ scalingH : {n : _} -> Num a => a -> HMatrix' n a
 scalingH x = indexSet [last,last] 1 $ repeatDiag x 0
 
 export
-translationH : {n : _} -> Num a => Vector n a -> HMatrix' n a
-translationH = hmatrix identity
+translationH : Num a => Vector n a -> HMatrix' n a
+translationH {n} v with (viewShape v)
+  _ | Shape [n] = hmatrix identity v
 
 export
 rotation2DH : Double -> HMatrix' 2 Double
