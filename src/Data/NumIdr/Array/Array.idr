@@ -43,6 +43,8 @@ data Array : (s : Vect rk Nat) -> (a : Type) -> Type where
   MkArray : (ord : Order) -> (sts : Vect rk Nat) ->
             (s : Vect rk Nat) -> PrimArray a -> Array s a
 
+%name Array arr
+
 
 --------------------------------------------------------------------------------
 -- Properties of arrays

@@ -5,7 +5,7 @@ import Data.NumIdr.PrimArray
 import Data.NumIdr.Array
 import Data.NumIdr.Vector
 import Data.NumIdr.Matrix
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 
 %default total
 
@@ -14,6 +14,8 @@ export
 record Point n a where
   constructor MkPoint
   vec : Vector n a
+
+%name Point p,q,r
 
 
 --------------------------------------------------------------------------------

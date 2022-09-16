@@ -15,6 +15,8 @@ public export
 Matrix : Nat -> Nat -> Type -> Type
 Matrix m n = Array [m,n]
 
+%name Matrix mat
+
 ||| A synonym for a square matrix with dimensions of length `n`.
 public export
 Matrix' : Nat -> Type -> Type
@@ -477,7 +479,7 @@ decompLUP {m,n} mat with (viewShape mat)
 
 
 --------------------------------------------------------------------------------
--- Matrix properties
+-- Determinant
 --------------------------------------------------------------------------------
 
 

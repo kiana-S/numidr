@@ -1,7 +1,7 @@
 module Data.NumIdr.Transform.Translation
 
 import Data.Vect
-import Data.NumIdr.Multiply
+import Data.NumIdr.Interfaces
 import Data.NumIdr.Array
 import Data.NumIdr.Vector
 import Data.NumIdr.Transform.Point

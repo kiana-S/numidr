@@ -13,6 +13,7 @@ public export
 Vector : Nat -> Type -> Type
 Vector n = Array [n]
 
+%name Vector v,w,u
 
 ||| The length (number of dimensions) of the vector.
 public export
