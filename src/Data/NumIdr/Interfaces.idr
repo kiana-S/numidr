@@ -22,6 +22,7 @@ Field a = (Eq a, Neg a, Fractional a)
 ||| * `0` is a minimum of `abslt`.
 public export
 interface (Eq a, Neg a, Fractional a) => FieldCmp a where
+  constructor MkFieldCmp
   ||| Compare the absolute values of two inputs.
   abslt : a -> a -> Bool
 
@@ -46,6 +47,7 @@ infixr 10 ^
 ||| * If `x *. (y *. z)` is defined, then `(x *. y) *. z` is defined and equal.
 public export
 interface Mult a b c | a,b where
+  constructor MkMult
   ||| A generalized multiplication/application operator for matrices and
   ||| vector transformations.
   (*.) : a -> b -> c
@@ -63,6 +65,7 @@ Mult' a = Mult a a a
 ||| * `identity *. x == x`
 public export
 interface Mult' a => MultMonoid a where
+  constructor MkMultMonoid
   ||| Construct an identity matrix or transformation.
   |||
   ||| NOTE: Creating an identity element for an `n`-dimensional transformation
@@ -76,6 +79,7 @@ interface Mult' a => MultMonoid a where
 ||| * `inverse x *. x == identity`
 public export
 interface MultMonoid a => MultGroup a where
+  constructor MkMultGroup
   ||| Calculate the inverse of the matrix or transformation.
   ||| WARNING: This function will not check if an inverse exists for the given
   ||| input, and will happily return results containing NaN values. To avoid
