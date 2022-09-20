@@ -137,7 +137,9 @@ unzipWith3 f arr = (map ((\(x,_,_) => x) . f) arr,
 
 export
 foldl : (b -> a -> b) -> b -> PrimArray a -> b
-foldl f z (MkPrimArray size arr) = unsafePerformIO $ do
+foldl f z (MkPrimArray size arr) =
+  if size == 0 then z
+  else unsafePerformIO $ do
     ref <- newIORef z
     for_ [0..pred size] $ \n => do
         x <- readIORef ref
@@ -147,7 +149,9 @@ foldl f z (MkPrimArray size arr) = unsafePerformIO $ do
 
 export
 foldr : (a -> b -> b) -> b -> PrimArray a -> b
-foldr f z (MkPrimArray size arr) = unsafePerformIO $ do
+foldr f z (MkPrimArray size arr) =
+  if size == 0 then z
+  else unsafePerformIO $ do
     ref <- newIORef z
     for_ [pred size..0] $ \n => do
          x <- arrayDataGet n arr
