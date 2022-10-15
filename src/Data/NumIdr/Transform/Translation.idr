@@ -4,33 +4,28 @@ import Data.Vect
 import Data.NumIdr.Interfaces
 import Data.NumIdr.Array
 import Data.NumIdr.Vector
+import Data.NumIdr.Matrix
+import Data.NumIdr.Homogeneous
 import Data.NumIdr.Transform.Point
+import Data.NumIdr.Transform.Transform
 
 %default total
 
 
-export
-record Translation n a where
-  constructor MkTrl
-  offset : Vector n a
-
-export
-fromVector : Vector n a -> Translation n a
-fromVector = MkTrl
+public export
+Translation : Nat -> Type -> Type
+Translation = Transform TTranslation
 
 
 export
-Cast a b => Cast (Translation n a) (Translation n b) where
-  cast (MkTrl v) = MkTrl (cast v)
+isTranslation : (Eq a, Num a) => HMatrix' n a -> Bool
+isTranslation {n} mat with (viewShape mat)
+  _ | Shape [S n,S n] = isHMatrix mat && getMatrix mat == identity
 
 export
-Num a => Mult (Translation n a) (Translation n a) (Translation n a) where
-  MkTrl a *. MkTrl b = MkTrl (zipWith (+) a b)
+fromVector : Num a => Vector n a -> Translation n a
+fromVector v = unsafeMkTrans (translationH v)
 
 export
-{n : _} -> Num a => MultMonoid (Translation n a) where
-  identity = MkTrl $ zeros [n]
-
-export
-{n : _} -> Neg a => MultGroup (Translation n a) where
-  inverse (MkTrl v) = MkTrl (-v)
+fromHMatrix : (Eq a, Num a) => HMatrix' n a -> Maybe (Translation n a)
+fromHMatrix mat = if isTranslation mat then Just (unsafeMkTrans mat) else Nothing

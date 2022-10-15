@@ -92,21 +92,22 @@ export
 
 
 -- Affine space operations
+-- These seem to cause issues with interface resolution
 
-namespace Left
-  export
-  (+) : Num a => Vector n a -> Point n a -> Point n a
-  a + MkPoint b = MkPoint (zipWith (+) a b)
+-- namespace Left
+--   export
+--   (+) : Num a => Vector n a -> Point n a -> Point n a
+--   a + MkPoint b = MkPoint (zipWith (+) a b)
 
-namespace Right
-  export
-  (+) : Num a => Point n a -> Vector n a -> Point n a
-  MkPoint a + b = MkPoint (zipWith (+) a b)
+-- namespace Right
+--   export
+--   (+) : Num a => Point n a -> Vector n a -> Point n a
+--   MkPoint a + b = MkPoint (zipWith (+) a b)
 
 
-export
-(-) : Neg a => Point n a -> Point n a -> Vector n a
-MkPoint a - MkPoint b = zipWith (-) a b
+-- export
+-- (-) : Neg a => Point n a -> Point n a -> Vector n a
+-- MkPoint a - MkPoint b = zipWith (-) a b
 
 
 --------------------------------------------------------------------------------

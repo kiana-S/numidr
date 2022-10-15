@@ -1,4 +1,4 @@
-module Data.NumIdr.Transform.Rotation
+module Data.NumIdr.Transform.Trivial
 
 import Data.Vect
 import Data.NumIdr.Interfaces
@@ -13,10 +13,11 @@ import Data.NumIdr.Transform.Transform
 
 
 public export
-Rotation : Nat -> Type -> Type
-Rotation = Transform TRotation
+Trivial : Nat -> Type -> Type
+Trivial = Transform TTrivial
 
 
 export
-isRotation' : Matrix' n a -> Bool
-isRotation' mat =
+isTrivial : (Eq a, Num a) => HMatrix' n a -> Bool
+isTrivial {n} mat with (viewShape mat)
+  _ | Shape [S n,S n] = mat == identity

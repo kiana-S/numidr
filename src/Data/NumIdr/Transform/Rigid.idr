@@ -1,4 +1,4 @@
-module Data.NumIdr.Transform.Rotation
+module Data.NumIdr.Transform.Rigid
 
 import Data.Vect
 import Data.NumIdr.Interfaces
@@ -13,10 +13,5 @@ import Data.NumIdr.Transform.Transform
 
 
 public export
-Rotation : Nat -> Type -> Type
-Rotation = Transform TRotation
-
-
-export
-isRotation' : Matrix' n a -> Bool
-isRotation' mat =
+Rigid : Nat -> Type -> Type
+Rigid = Transform TRigid

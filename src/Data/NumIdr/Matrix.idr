@@ -80,6 +80,19 @@ rotation2D : Double -> Matrix' 2 Double
 rotation2D a = matrix [[cos a, - sin a], [sin a, cos a]]
 
 
+export
+rotation3DX : Double -> Matrix' 3 Double
+rotation3DX a = matrix [[1,0,0], [0, cos a, - sin a], [0, sin a, cos a]]
+
+export
+rotation3DY : Double -> Matrix' 3 Double
+rotation3DY a = matrix [[cos a, 0, sin a], [0,1,0], [- sin a, 0, cos a]]
+
+export
+rotation3DZ : Double -> Matrix' 3 Double
+rotation3DZ a = matrix [[cos a, - sin a, 0], [sin a, cos a, 0], [0,0,1]]
+
+
 --------------------------------------------------------------------------------
 -- Indexing
 --------------------------------------------------------------------------------
@@ -572,6 +585,11 @@ solve mat = solveWithLUP mat (decompLUP mat)
 -- Matrix inversion
 --------------------------------------------------------------------------------
 
+
+export
+invertible : FieldCmp a => Matrix' n a -> Bool
+invertible {n} mat with (viewShape mat)
+  _ | Shape [n,n] = let lup = decompLUP mat in all (/=0) (diagonal lup.lu)
 
 ||| Try to invert a square matrix, returning `Nothing` if an inverse
 ||| does not exist.

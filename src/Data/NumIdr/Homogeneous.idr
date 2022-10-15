@@ -79,6 +79,14 @@ matrixToH {m,n} mat with (viewShape mat)
   _ | Shape [m,n] = indexSet [last,last] 1 $ resize [S m, S n] 0 mat
 
 
+export
+isHMatrix : (Eq a, Num a) => Matrix m n a -> Bool
+isHMatrix {m,n} mat with (viewShape mat)
+  isHMatrix {m=Z,n} mat | Shape [Z,n] = False
+  isHMatrix {m=S m,n=Z} mat | Shape [S m,Z] = False
+  isHMatrix {m=S m,n=S n} mat | Shape [S m,S n] =
+    getRow last mat == resize _ 1 (zeros [n])
+
 
 export
 getMatrix : HMatrix m n a -> Matrix m n a
@@ -110,3 +118,15 @@ translationH {n} v with (viewShape v)
 export
 rotation2DH : Double -> HMatrix' 2 Double
 rotation2DH = matrixToH . rotation2D
+
+export
+rotation3DXH : Double -> HMatrix' 3 Double
+rotation3DXH = matrixToH . rotation3DX
+
+export
+rotation3DYH : Double -> HMatrix' 3 Double
+rotation3DYH = matrixToH . rotation3DY
+
+export
+rotation3DZH : Double -> HMatrix' 3 Double
+rotation3DZH = matrixToH . rotation3DZ
