@@ -71,26 +71,26 @@ permuteM p = permuteInAxis 0 p (repeatDiag 1 0)
 
 ||| Construct the matrix that scales a vector by the given value.
 export
-scaling : {n : _} -> Num a => a -> Matrix' n a
-scaling x = repeatDiag x 0
+scale : {n : _} -> Num a => a -> Matrix' n a
+scale x = repeatDiag x 0
 
 ||| Calculate the rotation matrix of an angle.
 export
-rotation2D : Double -> Matrix' 2 Double
-rotation2D a = matrix [[cos a, - sin a], [sin a, cos a]]
+rotate2D : Double -> Matrix' 2 Double
+rotate2D a = matrix [[cos a, - sin a], [sin a, cos a]]
 
 
 export
-rotation3DX : Double -> Matrix' 3 Double
-rotation3DX a = matrix [[1,0,0], [0, cos a, - sin a], [0, sin a, cos a]]
+rotate3DX : Double -> Matrix' 3 Double
+rotate3DX a = matrix [[1,0,0], [0, cos a, - sin a], [0, sin a, cos a]]
 
 export
-rotation3DY : Double -> Matrix' 3 Double
-rotation3DY a = matrix [[cos a, 0, sin a], [0,1,0], [- sin a, 0, cos a]]
+rotate3DY : Double -> Matrix' 3 Double
+rotate3DY a = matrix [[cos a, 0, sin a], [0,1,0], [- sin a, 0, cos a]]
 
 export
-rotation3DZ : Double -> Matrix' 3 Double
-rotation3DZ a = matrix [[cos a, - sin a, 0], [sin a, cos a, 0], [0,0,1]]
+rotate3DZ : Double -> Matrix' 3 Double
+rotate3DZ a = matrix [[cos a, - sin a, 0], [sin a, cos a, 0], [0,0,1]]
 
 
 --------------------------------------------------------------------------------

@@ -273,8 +273,6 @@ export %inline
 (!!) : Array s a -> Coords s -> a
 arr !! is = index is arr
 
--- TODO: Create set/update at index functions
-
 ||| Update the entry at the given coordinates using the function.
 export
 indexUpdate : Coords s -> (a -> a) -> Array s a -> Array s a
@@ -452,7 +450,7 @@ resize s' def arr = fromFunction' s' (getOrder arr) (fromMaybe def . (arr !?) . 
 |||
 ||| @ s' The shape to resize the array to
 export
--- TODO: Come up with a solution that doesn't use `believe_me` or trip over some
+-- HACK: Come up with a solution that doesn't use `believe_me` or trip over some
 -- weird bug in the type-checker
 resizeLTE : (s' : Vect rk Nat) -> (0 ok : NP Prelude.id (zipWith LTE s' s)) =>
             Array {rk} s a -> Array s' a

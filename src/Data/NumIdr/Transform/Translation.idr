@@ -18,13 +18,13 @@ Translation = Transform TTranslation
 
 
 export
-isTranslation : (Eq a, Num a) => HMatrix' n a -> Bool
+isTranslation : Eq a => Num a => HMatrix' n a -> Bool
 isTranslation {n} mat with (viewShape mat)
   _ | Shape [S n,S n] = isHMatrix mat && getMatrix mat == identity
 
 export
-fromVector : Num a => Vector n a -> Translation n a
-fromVector v = unsafeMkTrans (translationH v)
+translate : Num a => Vector n a -> Translation n a
+translate v = unsafeMkTrans (translationH v)
 
 export
 fromHMatrix : (Eq a, Num a) => HMatrix' n a -> Maybe (Translation n a)

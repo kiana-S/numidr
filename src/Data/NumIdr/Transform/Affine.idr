@@ -17,7 +17,11 @@ Affine : Nat -> Type -> Type
 Affine = Transform TAffine
 
 export
+isAffine : FieldCmp a => HMatrix' n a -> Bool
+isAffine mat = isHMatrix mat && invertible (getMatrix mat)
+
+export
 fromHMatrix : FieldCmp a => HMatrix' n a -> Maybe (Affine n a)
-fromHMatrix mat = if invertible (getMatrix mat)
+fromHMatrix mat = if isAffine mat
                   then Just (unsafeMkTrans mat)
                   else Nothing

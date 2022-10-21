@@ -16,46 +16,22 @@ import Data.NumIdr.Transform.Point
 --------------------------------------------------------------------------------
 
 
-public export
-data TransType = TAffine | TIsometry | TRigid | TTranslation
-               | TLinear | TOrthonormal | TRotation | TTrivial
+export
+TransType : Type
+TransType = (Fin 4, Bool)
 
-%name TransType ty
-
-
-public export
-Show TransType where
-  show TAffine = "TAffine"
-  show TIsometry = "TIsometry"
-  show TRigid = "TRigid"
-  show TTranslation = "TTranslation"
-  show TLinear = "TLinear"
-  show TOrthonormal = "TOrthonormal"
-  show TRotation = "TRotation"
-  show TTrivial = "TTrivial"
-
-
--- Lower numbers can be coerced to higher numbers
-toSignature : TransType -> (Fin 4, Bool)
-toSignature TAffine = (3, True)
-toSignature TIsometry = (2, True)
-toSignature TRigid = (1, True)
-toSignature TTranslation = (0, True)
-toSignature TLinear = (3, False)
-toSignature TOrthonormal = (2, False)
-toSignature TRotation = (1, False)
-toSignature TTrivial = (0, False)
-
-public export
-fromSignature : (Fin 4, Bool) -> TransType
-fromSignature (3, True) = TAffine
-fromSignature (2, True) = TIsometry
-fromSignature (1, True) = TRigid
-fromSignature (0, True) = TTranslation
-fromSignature (3, False) = TLinear
-fromSignature (2, False) = TOrthonormal
-fromSignature (1, False) = TRotation
-fromSignature (0, False) = TTrivial
+namespace TransType
+  export
+  TAffine, TIsometry, TRigid, TTranslation,
+    TLinear, TOrthonormal, TRotation, TTrivial : TransType
+  TAffine = (3, True)
+  TIsometry = (2, True)
+  TRigid = (1, True)
+  TTranslation = (0, True)
+  TLinear = (3, False)
+  TOrthonormal = (2, False)
+  TRotation = (1, False)
+  TTrivial = (0, False)
 
 
 --------------------------------------------------------------------------------
@@ -65,17 +41,19 @@ fromSignature (0, False) = TTrivial
 
 public export
 (:<) : TransType -> TransType -> Bool
-x :< y with (toSignature x, toSignature y)
-  _ | ((xn, xb), (yn, yb)) = (xn <= yn) && (xb >= yb)
+(xn, xb) :< (yn, yb) = (xn <= yn) && (xb >= yb)
 
 public export
 transMult : TransType -> TransType -> TransType
-transMult x y with (toSignature x, toSignature y)
-  _ | ((xn, xb), (yn, yb)) = fromSignature (max xn yn, xb && yb)
+transMult (xn, xb) (yn, yb) = (max xn yn, xb && yb)
 
 public export
 linearizeType : TransType -> TransType
-linearizeType = fromSignature . mapSnd (const False) . toSignature
+linearizeType = mapSnd (const False)
+
+public export
+delinearizeType : TransType -> TransType
+delinearizeType = mapSnd (const True)
 
 
 export
@@ -97,6 +75,11 @@ export
 linearize : Num a => Transform ty n a -> Transform (linearizeType ty) n a
 linearize {n} (MkTrans _ mat) with (viewShape mat)
   _ | Shape [S n,S n] = MkTrans _ (hmatrix (getMatrix mat) (zeros _))
+
+export
+setTranslation : Num a => Vector n a -> Transform ty n a
+                  -> Transform (delinearizeType ty) n a
+setTranslation v (MkTrans _ mat) = MkTrans _ (hmatrix (getMatrix mat) v)
 
 
 --------------------------------------------------------------------------------

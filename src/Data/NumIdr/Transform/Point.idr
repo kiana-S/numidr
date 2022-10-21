@@ -90,24 +90,26 @@ export
 -- Arithmetic operations
 --------------------------------------------------------------------------------
 
+infixr 8 +.
+infixl 8 .+
+infixl 8 -.
 
 -- Affine space operations
--- These seem to cause issues with interface resolution
+-- These would have been named simply (+) and (-), but that caused
+-- too many issues with interface resolution.
 
--- namespace Left
---   export
---   (+) : Num a => Vector n a -> Point n a -> Point n a
---   a + MkPoint b = MkPoint (zipWith (+) a b)
+export
+(+.) : Num a => Vector n a -> Point n a -> Point n a
+a +. MkPoint b = MkPoint (zipWith (+) a b)
 
--- namespace Right
---   export
---   (+) : Num a => Point n a -> Vector n a -> Point n a
---   MkPoint a + b = MkPoint (zipWith (+) a b)
+export
+(.+) : Num a => Point n a -> Vector n a -> Point n a
+MkPoint a .+ b = MkPoint (zipWith (+) a b)
 
 
--- export
--- (-) : Neg a => Point n a -> Point n a -> Vector n a
--- MkPoint a - MkPoint b = zipWith (-) a b
+export
+(-.) : Neg a => Point n a -> Point n a -> Vector n a
+MkPoint a -. MkPoint b = zipWith (-) a b
 
 
 --------------------------------------------------------------------------------
@@ -150,8 +152,8 @@ Traversable (Point n) where
 
 export
 Show a => Show (Point n a) where
-  showPrec d (MkPoint v) = showCon d "point " $
-    show $ PrimArray.toList $ getPrim v
+  showPrec d (MkPoint v) = showCon d "point" $
+    showArg $ PrimArray.toList $ getPrim v
 
 export
 Cast a b => Cast (Point n a) (Point n b) where

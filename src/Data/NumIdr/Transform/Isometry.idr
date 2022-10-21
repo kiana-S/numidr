@@ -15,3 +15,6 @@ import Data.NumIdr.Transform.Transform
 public export
 Isometry : Nat -> Type -> Type
 Isometry = Transform TIsometry
+
+
+-- TODO: Add Isometry constructors

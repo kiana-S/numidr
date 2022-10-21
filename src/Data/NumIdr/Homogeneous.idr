@@ -62,7 +62,7 @@ hvectorLinear v = rewrite plusCommutative 1 n in vector (v ++ [0])
 export
 fromHomogeneous : HVector n a -> Vector n a
 fromHomogeneous = vector . init . toVect
--- TODO: Find an implementation for `fromHomogeneous` that doesn't suck
+-- HACK: Find an implementation for `fromHomogeneous` that doesn't suck
 
 
 export
@@ -116,17 +116,17 @@ translationH {n} v with (viewShape v)
   _ | Shape [n] = hmatrix identity v
 
 export
-rotation2DH : Double -> HMatrix' 2 Double
-rotation2DH = matrixToH . rotation2D
+rotate2DH : Double -> HMatrix' 2 Double
+rotate2DH = matrixToH . rotate2D
 
 export
-rotation3DXH : Double -> HMatrix' 3 Double
-rotation3DXH = matrixToH . rotation3DX
+rotate3DXH : Double -> HMatrix' 3 Double
+rotate3DXH = matrixToH . rotate3DX
 
 export
-rotation3DYH : Double -> HMatrix' 3 Double
-rotation3DYH = matrixToH . rotation3DY
+rotate3DYH : Double -> HMatrix' 3 Double
+rotate3DYH = matrixToH . rotate3DY
 
 export
-rotation3DZH : Double -> HMatrix' 3 Double
-rotation3DZH = matrixToH . rotation3DZ
+rotate3DZH : Double -> HMatrix' 3 Double
+rotate3DZH = matrixToH . rotate3DZ

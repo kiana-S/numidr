@@ -15,3 +15,5 @@ import Data.NumIdr.Transform.Transform
 public export
 Rigid : Nat -> Type -> Type
 Rigid = Transform TRigid
+
+-- TODO: Add Rigid constructors

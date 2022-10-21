@@ -18,14 +18,14 @@ Orthonormal = Transform TOrthonormal
 
 
 export
-isOrthonormal : Eq a => Num a => Matrix' n a -> Bool
-isOrthonormal {n} mat with (viewShape mat)
+isOrthonormal' : Eq a => Num a => Matrix' n a -> Bool
+isOrthonormal' {n} mat with (viewShape mat)
   _ | Shape [n,n] = identity == fromFunction [n,n] (\[i,j] => getColumn i mat `dot` getColumn j mat)
 
 export
 fromMatrix : Eq a => Num a => Matrix' n a -> Maybe (Orthonormal n a)
-fromMatrix mat = if isOrthonormal mat then Just (unsafeMkTrans (matrixToH mat))
-                                     else Nothing
+fromMatrix mat = if isOrthonormal' mat then Just (unsafeMkTrans (matrixToH mat))
+                                       else Nothing
 
 
 export
@@ -48,4 +48,4 @@ reflectZ = reflect 2
 export
 reflectNormal : (Neg a, Fractional a) => Vector n a -> Orthonormal n a
 reflectNormal {n} v with (viewShape v)
-  _ | Shape [n] = unsafeMkTrans $ matrixToH $ (identity - (2 / normSq v) *. outer v v)
+  _ | Shape [n] = unsafeMkTrans $ matrixToH $ identity - (2 / normSq v) *. outer v v

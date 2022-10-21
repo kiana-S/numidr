@@ -43,7 +43,7 @@ swapElems i j v =
 
 export
 permuteVect : Permutation n -> Vect n a -> Vect n a
-permuteVect p = foldMap @{%search} @{mon} (\(i,j) => swapElems i j) p.swaps
+permuteVect p = foldMap @{%search} @{mon} (uncurry swapElems) p.swaps
 
 
 export
@@ -54,7 +54,7 @@ swapValues i j x = if x == cast i then cast j
 
 export
 permuteValues : Permutation n -> Nat -> Nat
-permuteValues p = foldMap @{%search} @{mon} (\(i,j) => swapValues i j) p.swaps
+permuteValues p = foldMap @{%search} @{mon} (uncurry swapValues) p.swaps
 
 
 

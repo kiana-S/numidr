@@ -18,6 +18,6 @@ Trivial = Transform TTrivial
 
 
 export
-isTrivial : (Eq a, Num a) => HMatrix' n a -> Bool
+isTrivial : Eq a => Num a => HMatrix' n a -> Bool
 isTrivial {n} mat with (viewShape mat)
   _ | Shape [S n,S n] = mat == identity
