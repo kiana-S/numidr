@@ -28,9 +28,21 @@ interface (Eq a, Neg a, Fractional a) => FieldCmp a where
 
 
 export
-(Ord a, Abs a, Neg a, Fractional a) => FieldCmp a where
-  abslt x y = abs x < abs y
+FieldCmp Double where
+  abslt = (<) `on` abs
 
+
+-- Alternative implementations of `Eq` and `FieldCmp` that compare floating
+-- point numbers approximately, useful when working with transforms
+namespace Eq
+  export
+  WithEpsilon : Double -> Eq Double
+  WithEpsilon ep = MkEq (\x,y => x - y < ep) (\x,y => x - y >= ep)
+
+namespace FieldCmp
+  export
+  WithEpsilon : Double -> FieldCmp Double
+  WithEpsilon ep = MkFieldCmp @{WithEpsilon ep} ((<) `on` abs)
 
 --------------------------------------------------------------------------------
 -- Multiplication
@@ -82,8 +94,8 @@ interface MultMonoid a => MultGroup a where
   constructor MkMultGroup
   ||| Calculate the inverse of the matrix or transformation.
   ||| WARNING: This function will not check if an inverse exists for the given
-  ||| input, and will happily return results containing NaN values. To avoid
-  ||| this, use `tryInverse` instead.
+  ||| input, and will happily divide by zero or return results containing NaN.
+  ||| To avoid this, use `tryInverse` instead.
   inverse : a -> a
 
 
