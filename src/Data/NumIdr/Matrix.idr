@@ -74,20 +74,23 @@ export
 scale : {n : _} -> Num a => a -> Matrix' n a
 scale x = repeatDiag x 0
 
-||| Calculate the rotation matrix of an angle.
+||| Construct a 2D rotation matrix that rotates by the given angle (in radians).
 export
 rotate2D : Double -> Matrix' 2 Double
 rotate2D a = matrix [[cos a, - sin a], [sin a, cos a]]
 
 
+||| Construct a 3D rotation matrix around the x-axis.
 export
 rotate3DX : Double -> Matrix' 3 Double
 rotate3DX a = matrix [[1,0,0], [0, cos a, - sin a], [0, sin a, cos a]]
 
+||| Construct a 3D rotation matrix around the y-axis.
 export
 rotate3DY : Double -> Matrix' 3 Double
 rotate3DY a = matrix [[cos a, 0, sin a], [0,1,0], [- sin a, 0, cos a]]
 
+||| Construct a 3D rotation matrix around the z-axis.
 export
 rotate3DZ : Double -> Matrix' 3 Double
 rotate3DZ a = matrix [[cos a, - sin a, 0], [sin a, cos a, 0], [0,0,1]]

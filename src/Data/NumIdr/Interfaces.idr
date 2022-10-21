@@ -36,7 +36,7 @@ export
 -- Multiplication
 --------------------------------------------------------------------------------
 
-infixr 9 *.
+infixl 9 *.
 infixr 10 ^
 
 ||| A generalized multiplication/application operator. This interface is

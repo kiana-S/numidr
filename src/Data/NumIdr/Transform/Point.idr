@@ -10,6 +10,9 @@ import Data.NumIdr.Interfaces
 %default total
 
 
+||| A point is a wrapper around the basic vector type, intended to be used with
+||| `Transform`. These contain the exact same information as a vector, but
+||| behave differently when transforms are applied to them.
 export
 record Point n a where
   constructor MkPoint
@@ -23,19 +26,23 @@ record Point n a where
 --------------------------------------------------------------------------------
 
 
+||| Construct a point from a vector.
 export
 fromVector : Vector n a -> Point n a
 fromVector = MkPoint
 
+||| Convert a point to a vector.
 export
 toVector : Point n a -> Vector n a
 toVector = vec
 
+||| Construct a point given its coordinates.
 export
 point : Vect n a -> Point n a
 point = fromVector . vector
 
 
+||| The origin point.
 export
 origin : Num a => {n : Nat} -> Point n a
 origin = fromVector $ zeros [n]
@@ -49,23 +56,34 @@ origin = fromVector $ zeros [n]
 infixl 10 !!
 infixl 10 !?
 
+||| Index the point at the given coordinate.
 export
 index : Fin n -> Point n a -> a
-index n (MkPoint v) = index n v
+index i (MkPoint v) = index i v
 
+||| Index the point at the given coordinate.
+|||
+||| This is the operator form of `index`.
 export
 (!!) : Point n a -> Fin n -> a
 (!!) = flip index
 
+||| Index the point at the given coordinate, returning `Nothing` if the index
+||| is out of bounds.
 export
 indexNB : Nat -> Point n a -> Maybe a
 indexNB n (MkPoint v) = indexNB n v
 
+||| Index the point at the given coordinate, returning `Nothing` if the index
+||| is out of bounds.
+|||
+||| This is the operator form of `indexNB`.
 export
 (!?) : Point n a -> Nat -> Maybe a
 (!?) = flip indexNB
 
 
+||| Return a `Vect` of the coordinates in the point.
 export
 toVect : Point n a -> Vect n a
 toVect = toVect . vec
@@ -73,14 +91,17 @@ toVect = toVect . vec
 
 -- Named projections
 
+||| Return the x-coordinate (the first value) of the vector.
 export
 (.x) : Point (1 + n) a -> a
 (.x) = index FZ
 
+||| Return the y-coordinate (the second value) of the vector.
 export
 (.y) : Point (2 + n) a -> a
 (.y) = index (FS FZ)
 
+||| Return the z-coordinate (the third value) of the vector.
 export
 (.z) : Point (3 + n) a -> a
 (.z) = index (FS (FS FZ))
@@ -98,15 +119,18 @@ infixl 8 -.
 -- These would have been named simply (+) and (-), but that caused
 -- too many issues with interface resolution.
 
+||| Add a vector to a point.
 export
 (+.) : Num a => Vector n a -> Point n a -> Point n a
 a +. MkPoint b = MkPoint (zipWith (+) a b)
 
+||| Add a point to a vector.
 export
 (.+) : Num a => Point n a -> Vector n a -> Point n a
 MkPoint a .+ b = MkPoint (zipWith (+) a b)
 
 
+||| Subtract two points to get the vector between them.
 export
 (-.) : Neg a => Point n a -> Point n a -> Vector n a
 MkPoint a -. MkPoint b = zipWith (-) a b

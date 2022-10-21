@@ -12,14 +12,19 @@ import Data.NumIdr.Transform.Transform
 %default total
 
 
+||| An affine transform can contain any invertible affine map.
 public export
 Affine : Nat -> Type -> Type
 Affine = Transform TAffine
 
+||| Determine if a homogeneous matrix represents an affine transform
+||| (i.e. is invertible).
 export
 isAffine : FieldCmp a => HMatrix' n a -> Bool
 isAffine mat = isHMatrix mat && invertible (getMatrix mat)
 
+
+||| Try to construct an affine transform from a homogeneous matrix.
 export
 fromHMatrix : FieldCmp a => HMatrix' n a -> Maybe (Affine n a)
 fromHMatrix mat = if isAffine mat

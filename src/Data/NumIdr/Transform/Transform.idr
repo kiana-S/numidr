@@ -16,12 +16,14 @@ import Data.NumIdr.Transform.Point
 --------------------------------------------------------------------------------
 
 
+||| A transform type encodes the properties of a transform. There are 8 transform
+||| types, and together with the coersion relation `(:<)` they form a semilattice.
 export
 TransType : Type
 TransType = (Fin 4, Bool)
 
 namespace TransType
-  export
+  public export
   TAffine, TIsometry, TRigid, TTranslation,
     TLinear, TOrthonormal, TRotation, TTrivial : TransType
   TAffine = (3, True)
@@ -39,26 +41,46 @@ namespace TransType
 --------------------------------------------------------------------------------
 
 
+||| Coersion relation for transform types.
+||| `a :< b` is `True` if and only if any transform of type `a` can be cast into
+||| a transform of type `b`.
 public export
 (:<) : TransType -> TransType -> Bool
-(xn, xb) :< (yn, yb) = (xn <= yn) && (xb >= yb)
+(xn, xb) :< (yn, yb) = (xn <= yn) && (xb <= yb)
 
+||| Return the type of transform resulting from multiplying transforms of
+||| the two input types.
 public export
 transMult : TransType -> TransType -> TransType
-transMult (xn, xb) (yn, yb) = (max xn yn, xb && yb)
+transMult (xn, xb) (yn, yb) = (max xn yn, xb || yb)
 
+||| Return the linearized transform type, i.e. the transform type resulting
+||| from removing the translation component of the original transform.
 public export
 linearizeType : TransType -> TransType
 linearizeType = mapSnd (const False)
 
+||| Return the delinearized transform type, i.e. the transform type resulting
+||| from adding a translation to the original transform.
 public export
 delinearizeType : TransType -> TransType
 delinearizeType = mapSnd (const True)
 
 
+||| A transform is a wrapper for a homogeneous matrix subject to certain
+||| restrictions, such as a rotation, an isometry, or a rigid transform.
+||| The restriction on the transform is encoded by the transform's *type*.
+|||
+||| Transforms have special behavior over matrices when it comes to multiplication.
+||| When a transform is applied to a vector, only the linear part of the transform
+||| is applied, as if `linearize` were called on the transform before the operation.
+|||
+||| In order for non-linear transformations to be used, the transform should be
+||| applied to the special wrapper type `Point`. This separates the concepts of
+||| point and vector, which is often useful when working with affine maps.
 export
 data Transform : TransType -> Nat -> Type -> Type where
-  MkTrans : (type : TransType) -> HMatrix' n a -> Transform type n a
+  MkTrans : (ty : TransType) -> HMatrix' n a -> Transform ty n a
 
 %name Transform t
 
@@ -67,15 +89,31 @@ export
 unsafeMkTrans : {ty : _} -> HMatrix' n a -> Transform ty n a
 unsafeMkTrans = MkTrans _
 
-export
-toHMatrix : Transform ty n a -> HMatrix' n a
-toHMatrix (MkTrans _ mat) = mat
 
+||| Unwrap the inner homogeneous matrix from a transform.
+export
+getHMatrix : Transform ty n a -> HMatrix' n a
+getHMatrix (MkTrans _ mat) = mat
+
+||| Unwrap the inner matrix from a transform, ignoring the translation component
+||| if one exists.
+export
+getMatrix : Transform ty n a -> Matrix' n a
+getMatrix (MkTrans _ mat) = getMatrix mat
+
+||| Linearize a transform by removing its translation component.
+||| If the transform is already linear, then this function does nothing.
 export
 linearize : Num a => Transform ty n a -> Transform (linearizeType ty) n a
 linearize {n} (MkTrans _ mat) with (viewShape mat)
   _ | Shape [S n,S n] = MkTrans _ (hmatrix (getMatrix mat) (zeros _))
 
+||| Set the translation component of a transform.
+|||
+||| `setTranslation v tr == translate v *. linearize tr`
+|||
+||| If `tr` is linear:
+||| `setTranslation v tr == translate v *. tr`
 export
 setTranslation : Num a => Vector n a -> Transform ty n a
                   -> Transform (delinearizeType ty) n a
@@ -124,7 +162,3 @@ export
 export
 {t2 : _} -> So (t1 :< t2) => Cast a b => Cast (Transform t1 n a) (Transform t2 n b) where
   cast (MkTrans t1 mat) = MkTrans t2 (cast mat)
-
-export
-Show a => Show (Transform ty n a) where
-  showPrec p (MkTrans ty mat) = showCon p "MkTrans" $ showArg ty ++ showArg mat

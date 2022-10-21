@@ -132,12 +132,12 @@ swizzle p v = rewrite sym (lengthCorrect p)
               )
 
 
-||| Swap two entries in a vector.
+||| Swap two coordinates in a vector.
 export
 swapCoords : (i,j : Fin n) -> Vector n a -> Vector n a
 swapCoords = swapInAxis 0
 
-||| Permute the entries in a vector.
+||| Permute the coordinates in a vector.
 export
 permuteCoords : Permutation n -> Vector n a -> Vector n a
 permuteCoords = permuteInAxis 0
@@ -166,3 +166,14 @@ perp : Neg a => Vector 2 a -> Vector 2 a -> a
 perp a b = a.x * b.y - a.y * b.x
 
 
+||| Calculate the cross product of the two vectors.
+export
+cross : Neg a => Vector 3 a -> Vector 3 a -> Vector 3 a
+cross v1 v2 = let [a, b, c] = elements v1
+                  [x, y, z] = elements v2
+              in  vector [b*z - c*y, c*x - a*z, a*y - b*x]
+
+||| Calculate the triple product of the three vectors.
+export
+triple : Neg a => Vector 3 a -> Vector 3 a -> Vector 3 a -> a
+triple a b c = a `dot` (b `cross` c)
