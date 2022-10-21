@@ -20,7 +20,6 @@ Rotation = Transform TRotation
 
 
 ||| Determine if a matrix represents a rotation.
--- HACK: Replace with more efficient method
 export
 isRotation' : FieldCmp a => Matrix' n a -> Bool
 isRotation' mat = isOrthonormal' mat && det mat == 1
