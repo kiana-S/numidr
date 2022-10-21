@@ -121,7 +121,7 @@ namespace Strict
   cRangeToList (StartBound x) = Right $ range (cast x) n
   cRangeToList (EndBound x) = Right $ range 0 (cast x)
   cRangeToList (Bounds x y) = Right $ range (cast x) (cast y)
-  cRangeToList (Indices xs) = Right $ map cast xs
+  cRangeToList (Indices xs) = Right $ map cast $ nub xs
   cRangeToList (Filter p) = Right $ map cast $ filter p $ toList Fin.range
 
 
@@ -163,14 +163,27 @@ namespace NB
   cRangeNBToList s All = range 0 s
   cRangeNBToList s (StartBound x) = range x s
   cRangeNBToList s (EndBound x) = range 0 x
-  cRangeNBToList s (Bounds x y) = range x (minimum y s)
-  cRangeNBToList s (Indices xs) = filter (<s) xs
+  cRangeNBToList s (Bounds x y) = range x y
+  cRangeNBToList s (Indices xs) = nub xs
   cRangeNBToList s (Filter p) = filter p $ range 0 s
+
+  export
+  validateCRangeNB : Nat -> CRangeNB -> Bool
+  validateCRangeNB s All = True
+  validateCRangeNB s (StartBound x) = x < s
+  validateCRangeNB s (EndBound x) = x <= s
+  validateCRangeNB s (Bounds x y) = x < s && y <= s
+  validateCRangeNB s (Indices xs) = all (<s) xs
+  validateCRangeNB s (Filter p) = True
 
   ||| Calculate the new shape given by a coordinate range.
   export
   newShape : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat
   newShape = zipWith (length .: cRangeNBToList)
+
+  export
+  validateShape : Vect rk Nat -> Vect rk CRangeNB -> Bool
+  validateShape = all id .: zipWith validateCRangeNB
 
   export
   getNewPos : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat -> Vect rk Nat

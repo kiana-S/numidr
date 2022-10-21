@@ -333,7 +333,7 @@ indexUpdateRange rs f arr = indexSetRange rs (f $ arr !!.. rs) arr
 ||| coordinates are out of bounds.
 export
 indexNB : Vect rk Nat -> Array {rk} s a -> Maybe a
-indexNB is arr = if and $ map delay $ zipWith (<) is (shape arr)
+indexNB is arr = if all id $ zipWith (<) is (shape arr)
                   then Just $ index (getLocation' (strides arr) is) (getPrim arr)
                   else Nothing
 
@@ -345,42 +345,47 @@ export %inline
 (!?) : Array {rk} s a -> Vect rk Nat -> Maybe a
 arr !? is = indexNB is arr
 
-||| Update the entry at the given coordinates using the function. The array is
-||| returned unchanged if the coordinate is out of bounds.
+||| Update the entry at the given coordinates using the function. `Nothing` is
+||| returned if the coordinates are out of bounds.
 export
-indexUpdateNB : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Array s a
+indexUpdateNB : Vect rk Nat -> (a -> a) -> Array {rk} s a -> Maybe (Array s a)
 indexUpdateNB is f (MkArray ord sts s arr) =
-  MkArray ord sts s (updateAt (getLocation' sts is) f arr)
+  if all id $ zipWith (<) is s
+  then Just $ MkArray ord sts s (updateAt (getLocation' sts is) f arr)
+  else Nothing
 
-||| Set the entry at the given coordinates to the given value. The array is
-||| returned unchanged if the coordinate is out of bounds.
+||| Set the entry at the given coordinates using the function. `Nothing` is
+||| returned if the coordinates are out of bounds.
 export
-indexSetNB : Vect rk Nat -> a -> Array {rk} s a -> Array s a
+indexSetNB : Vect rk Nat -> a -> Array {rk} s a -> Maybe (Array s a)
 indexSetNB is = indexUpdateNB is . const
 
 
 ||| Index the array using the given range of coordinates, returning a new array.
-||| Entries outside of the array's bounds are not included.
+||| If any of the given indices are out of bounds, then `Nothing` is returned.
 export
-indexRangeNB : (rs : Vect rk CRangeNB) -> Array s a -> Array (newShape s rs) a
+indexRangeNB : (rs : Vect rk CRangeNB) -> Array s a -> Maybe (Array (newShape s rs) a)
 indexRangeNB {s} rs arr with (viewShape arr)
   _ | Shape s =
-    let ord = getOrder arr
-        sts = calcStrides ord s'
-    in  MkArray ord sts s'
-          (unsafeFromIns (product s') $
-            map (\(is,is') => (getLocation' sts is',
-                                index (getLocation' (strides arr) is) (getPrim arr)))
-            $ getCoordsList s rs)
+    if validateShape s rs
+    then
+      let ord = getOrder arr
+          sts = calcStrides ord s'
+      in  Just $ MkArray ord sts s'
+            (unsafeFromIns (product s') $
+              map (\(is,is') => (getLocation' sts is',
+                                  index (getLocation' (strides arr) is) (getPrim arr)))
+              $ getCoordsList s rs)
+    else Nothing
   where s' : Vect ? Nat
         s' = newShape s rs
 
 ||| Index the array using the given range of coordinates, returning a new array.
-||| Entries outside of the array's bounds are not included.
+||| If any of the given indices are out of bounds, then `Nothing` is returned.
 |||
 ||| This is the operator form of `indexRangeNB`.
 export %inline
-(!?..) : Array s a -> (rs : Vect rk CRangeNB) -> Array (newShape s rs) a
+(!?..) : Array s a -> (rs : Vect rk CRangeNB) -> Maybe (Array (newShape s rs) a)
 arr !?.. rs = indexRangeNB rs arr
 
 
