@@ -1,0 +1,38 @@
+[
+  {
+    "name": "numidr",
+    "version": "0.2.0",
+    "deps": [],
+    "modules": [
+      "Data.NP",
+      "Data.Permutation",
+      "Data.NumIdr",
+      "Data.NumIdr.Array",
+      "Data.NumIdr.Array.Array",
+      "Data.NumIdr.Array.Coords",
+      "Data.NumIdr.Array.Order",
+      "Data.NumIdr.Homogeneous",
+      "Data.NumIdr.Matrix",
+      "Data.NumIdr.Interfaces",
+      "Data.NumIdr.PrimArray",
+      "Data.NumIdr.Scalar",
+      "Data.NumIdr.Vector",
+      "Data.NumIdr.Transform",
+      "Data.NumIdr.Transform.Affine",
+      "Data.NumIdr.Transform.Isometry",
+      "Data.NumIdr.Transform.Linear",
+      "Data.NumIdr.Transform.Orthonormal",
+      "Data.NumIdr.Transform.Point",
+      "Data.NumIdr.Transform.Rigid",
+      "Data.NumIdr.Transform.Rotation",
+      "Data.NumIdr.Transform.Transform",
+      "Data.NumIdr.Transform.Translation",
+      "Data.NumIdr.Transform.Trivial"
+    ],
+    "passthru": {
+      "authors": "Kiana Sheibani",
+      "license": "MIT",
+      "sourceloc": "https://github.com/kiana-S/numidr"
+    }
+  }
+]

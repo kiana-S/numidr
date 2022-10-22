@@ -37,7 +37,7 @@ FieldCmp Double where
 namespace Eq
   export
   WithEpsilon : Double -> Eq Double
-  WithEpsilon ep = MkEq (\x,y => x - y < ep) (\x,y => x - y >= ep)
+  WithEpsilon ep = MkEq (\x,y => abs (x - y) < ep) (\x,y => abs (x - y) >= ep)
 
 namespace FieldCmp
   export
