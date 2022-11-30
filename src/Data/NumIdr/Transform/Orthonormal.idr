@@ -40,7 +40,7 @@ fromMatrix mat = if isOrthonormal' mat then Just (unsafeMkTrans (matrixToH mat))
 ||| Construct an orthonormal transform that reflects a particular coordinate.
 export
 reflect : {n : _} -> Neg a => Fin n -> Orthonormal n a
-reflect i = unsafeMkTrans $ indexSet [weaken i,weaken i] (-1) identity
+reflect = unsafeMkTrans . reflectH
 
 ||| The orthonormal transform that reflects on the x-coordinate (first coordinate).
 export

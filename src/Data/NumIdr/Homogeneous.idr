@@ -27,7 +27,7 @@ public export
 HMatrix' : Nat -> Type -> Type
 HMatrix' n = HMatrix n n
 
-||| An `n`-dimensional homogeneous vector type.
+||| An homogeneous vector type.
 |||
 ||| Homogeneous vectors are vectors intended to be multiplied with homogeneous
 ||| matrices (see `HMatrix`). They have an extra dimension compared to regular
@@ -129,6 +129,7 @@ translationH : Num a => Vector n a -> HMatrix' n a
 translationH {n} v with (viewShape v)
   _ | Shape [n] = hmatrix identity v
 
+
 ||| Construct a 2D homogeneous matrix that rotates by the given angle (in radians).
 export
 rotate2DH : Double -> HMatrix' 2 Double
@@ -148,3 +149,20 @@ rotate3DYH = matrixToH . rotate3DY
 export
 rotate3DZH : Double -> HMatrix' 3 Double
 rotate3DZH = matrixToH . rotate3DZ
+
+
+export
+reflectH : {n : _} -> Neg a => Fin n -> HMatrix' n a
+reflectH i = indexSet [weaken i,weaken i] (-1) identity
+
+export
+reflectXH : {n : _} -> Neg a => HMatrix' (1 + n) a
+reflectXH = reflectH 0
+
+export
+reflectYH : {n : _} -> Neg a => HMatrix' (2 + n) a
+reflectYH = reflectH 0
+
+export
+reflectZH : {n : _} -> Neg a => HMatrix' (3 + n) a
+reflectZH = reflectH 0

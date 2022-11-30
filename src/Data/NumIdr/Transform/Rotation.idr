@@ -25,6 +25,7 @@ isRotation' : FieldCmp a => Matrix' n a -> Bool
 isRotation' mat = isOrthonormal' mat && det mat == 1
 
 ||| Try to constuct a rotation from a matrix.
+export
 fromMatrix : FieldCmp a => Matrix' n a -> Maybe (Rotation n a)
 fromMatrix mat = if isRotation' mat then Just (unsafeMkTrans $ matrixToH mat)
                                     else Nothing
@@ -34,6 +35,11 @@ export
 isRotation : FieldCmp a => HMatrix' n a -> Bool
 isRotation {n} mat with (viewShape mat)
   _ | Shape [S n, S n] = isHMatrix mat && all (==0) (mat !!.. [EndBound last, One last])
+
+export
+fromHMatrix : FieldCmp a => HMatrix' n a -> Maybe (Rotation n a)
+fromHMatrix mat = if isRotation mat then Just (unsafeMkTrans mat)
+                                    else Nothing
 
 ||| Construct a 2D rotation that rotates by the given angle (in radians).
 export

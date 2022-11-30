@@ -96,6 +96,23 @@ rotate3DZ : Double -> Matrix' 3 Double
 rotate3DZ a = matrix [[cos a, - sin a, 0], [sin a, cos a, 0], [0,0,1]]
 
 
+export
+reflect : {n : _} -> Neg a => Fin n -> Matrix' n a
+reflect i = indexSet [i, i] (-1) (repeatDiag 1 0)
+
+export
+reflectX : {n : _} -> Neg a => Matrix' (1 + n) a
+reflectX = reflect 0
+
+export
+reflectY : {n : _} -> Neg a => Matrix' (2 + n) a
+reflectY = reflect 1
+
+export
+reflectZ : {n : _} -> Neg a => Matrix' (3 + n) a
+reflectZ = reflect 2
+
+
 --------------------------------------------------------------------------------
 -- Indexing
 --------------------------------------------------------------------------------
@@ -223,6 +240,14 @@ outer {m,n} a b with (viewShape a, viewShape b)
 export
 trace : Num a => Matrix m n a -> a
 trace = sum . diagonal'
+
+
+||| Construct a matrix that reflects a vector along a hyperplane of the
+||| given normal vector. The input does not have to be a unit vector.
+export
+reflectNormal : (Neg a, Fractional a) => Vector n a -> Matrix' n a
+reflectNormal {n} v with (viewShape v)
+  _ | Shape [n] = repeatDiag 1 0 - (2 / normSq v) *. outer v v
 
 
 --------------------------------------------------------------------------------

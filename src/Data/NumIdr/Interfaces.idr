@@ -31,7 +31,6 @@ export
 FieldCmp Double where
   abslt = (<) `on` abs
 
-
 -- Alternative implementations of `Eq` and `FieldCmp` that compare floating
 -- point numbers approximately, useful when working with transforms
 namespace Eq
