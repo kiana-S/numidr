@@ -516,6 +516,25 @@ stack axis arrs = rewrite sym (lengthCorrect arrs) in
     getAxisInd FZ (i :: is) = (i, is)
     getAxisInd {s=_::_} (FS ax) (i :: is) = mapSnd (i::) (getAxisInd ax is)
 
+export
+joinAxes : {s' : _} -> Array s (Array s' a) -> Array (s ++ s') a
+joinAxes {s} arr with (viewShape arr)
+  _ | Shape s = fromFunctionNB (s ++ s') (\is => arr !# takeUpTo s is !# dropUpTo s is)
+  where
+    takeUpTo : Vect rk Nat -> Vect (rk + rk') Nat -> Vect rk Nat
+    takeUpTo [] ys = []
+    takeUpTo (x::xs) (y::ys) = y :: takeUpTo xs ys
+
+    dropUpTo : Vect rk Nat -> Vect (rk + rk') Nat -> Vect rk' Nat
+    dropUpTo [] ys = ys
+    dropUpTo (x::xs) (y::ys) = dropUpTo xs ys
+
+
+export
+splitAxes : (rk : Nat) -> {0 rk' : Nat} -> {s : _} ->
+            Array {rk=rk+rk'} s a -> Array (take {m=rk'} rk s) (Array (drop {m=rk'} rk s) a)
+splitAxes _ {s} arr = fromFunctionNB _ (\is => fromFunctionNB _ (\is' => arr !# (is ++ is')))
+
 
 ||| Construct the transpose of an array by reversing the order of its axes.
 export

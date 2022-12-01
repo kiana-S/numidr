@@ -120,6 +120,19 @@ setTranslation : Num a => Vector n a -> Transform ty n a
 setTranslation v (MkTrans _ mat) = MkTrans _ (hmatrix (getMatrix mat) v)
 
 
+namespace Vector
+  export
+  applyInv : FieldCmp a => Transform ty n a -> Vector n a -> Vector n a
+  applyInv tr v = assert_total $ case solve (getMatrix tr) v of Just v' => v'
+
+namespace Point
+  export
+  applyInv : FieldCmp a => Transform ty n a -> Point n a -> Point n a
+  applyInv (MkTrans _ mat) p = assert_total $
+    case solve (getMatrix mat) (zipWith (-) (toVector p) (getTranslationVector mat)) of
+      Just v => fromVector v
+
+
 --------------------------------------------------------------------------------
 -- Interface implementations
 --------------------------------------------------------------------------------

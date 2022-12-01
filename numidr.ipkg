@@ -1,5 +1,5 @@
 package numidr
-version = 0.2.0
+version = 0.2.1
 
 authors = "Kiana Sheibani"
 license = "MIT"
