@@ -26,6 +26,10 @@ export
 isRigid : FieldCmp a => HMatrix' n a -> Bool
 isRigid mat = isHMatrix mat && isRotation' (getMatrix mat)
 
+export
+fromHMatrix : FieldCmp a => HMatrix' n a -> Maybe (Rigid n a)
+fromHMatrix mat = if isRigid mat then Just (unsafeMkTrans mat) else Nothing
+
 
 export
 rigid2D : Vector 2 Double -> Double -> Rigid 2 Double

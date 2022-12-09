@@ -35,6 +35,7 @@ export
 isRotation : FieldCmp a => HMatrix' n a -> Bool
 isRotation {n} mat with (viewShape mat)
   _ | Shape [S n, S n] = isHMatrix mat && all (==0) (mat !!.. [EndBound last, One last])
+                            && isRotation' (getMatrix mat)
 
 export
 fromHMatrix : FieldCmp a => HMatrix' n a -> Maybe (Rotation n a)

@@ -49,6 +49,21 @@ export
 basis : Num a => {n : _} -> (i : Fin n) -> Vector n a
 basis i = fromFunction _ (\[j] => if i == j then 1 else 0)
 
+||| The first basis vector.
+export
+basisX : {n : _} -> Num a => Vector (1 + n) a
+basisX = basis FZ
+
+||| The second basis vector.
+export
+basisY : {n : _} -> Num a => Vector (2 + n) a
+basisY = basis (FS FZ)
+
+||| The third basis vector.
+export
+basisZ : {n : _} -> Num a => Vector (3 + n) a
+basisZ = basis (FS (FS FZ))
+
 
 ||| Calculate the 2D unit vector with the given angle off the x-axis.
 export

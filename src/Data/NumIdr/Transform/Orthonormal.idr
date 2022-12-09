@@ -32,6 +32,18 @@ fromMatrix mat = if isOrthonormal' mat then Just (unsafeMkTrans (matrixToH mat))
                                        else Nothing
 
 
+||| Determine if a homogeneous matrix represents a rotation.
+export
+isOrthonormal : Eq a => Num a => HMatrix' n a -> Bool
+isOrthonormal {n} mat with (viewShape mat)
+  _ | Shape [S n, S n] = isHMatrix mat && all (==0) (mat !!.. [EndBound last, One last])
+                            && isOrthonormal' (getMatrix mat)
+
+export
+fromHMatrix : Eq a => Num a => HMatrix' n a -> Maybe (Orthonormal n a)
+fromHMatrix mat = if isOrthonormal mat then Just (unsafeMkTrans mat) else Nothing
+
+
 --------------------------------------------------------------------------------
 -- Reflections
 --------------------------------------------------------------------------------
