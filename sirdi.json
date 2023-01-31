@@ -1,7 +1,7 @@
 [
   {
     "name": "numidr",
-    "version": "0.2.0",
+    "version": "1.0.0",
     "deps": [],
     "modules": [
       "Data.NP",
@@ -17,6 +17,7 @@
       "Data.NumIdr.PrimArray",
       "Data.NumIdr.Scalar",
       "Data.NumIdr.Vector",
+      "Data.NumIdr.LArray",
       "Data.NumIdr.Transform",
       "Data.NumIdr.Transform.Affine",
       "Data.NumIdr.Transform.Isometry",

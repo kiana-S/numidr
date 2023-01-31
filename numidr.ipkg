@@ -1,5 +1,5 @@
 package numidr
-version = 0.2.1
+version = 1.0.0
 
 authors = "Kiana Sheibani"
 license = "MIT"
@@ -22,6 +22,7 @@ modules = Data.NP,
           Data.NumIdr.PrimArray,
           Data.NumIdr.Scalar,
           Data.NumIdr.Vector,
+          Data.NumIdr.LArray,
           Data.NumIdr.Transform,
           Data.NumIdr.Transform.Affine,
           Data.NumIdr.Transform.Isometry,
