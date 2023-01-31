@@ -46,6 +46,11 @@ data Array : (s : Vect rk Nat) -> (a : Type) -> Type where
 %name Array arr
 
 
+export
+unsafeMkArray : Order -> Vect rk Nat -> (s : Vect rk Nat) -> PrimArray a -> Array s a
+unsafeMkArray = MkArray
+
+
 --------------------------------------------------------------------------------
 -- Properties of arrays
 --------------------------------------------------------------------------------

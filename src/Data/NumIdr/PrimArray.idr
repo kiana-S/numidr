@@ -89,6 +89,13 @@ updateAt n f arr = if n >= length arr then arr else
     arrayDataSet n (f x) cpy.content
     pure cpy
 
+export
+unsafeUpdateInPlace : Nat -> (a -> a) -> PrimArray a -> PrimArray a
+unsafeUpdateInPlace n f arr = unsafePerformIO $ do
+  x <- arrayDataGet n arr.content
+  arrayDataSet n (f x) arr.content
+  pure arr
+
 ||| Convert a primitive array to a list.
 export
 toList : PrimArray a -> List a
