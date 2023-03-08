@@ -7,22 +7,43 @@ import Data.NumIdr.Array
 %default total
 
 
+||| An array type that is guaranteed to be unique through linear types.
+|||
+||| This type can be used to operate on an array value without it being copied
+||| on every mutation.
 export
 data LArray : Vect rk Nat -> Type -> Type where
   MkLArray : (ord : Order) -> (sts : Vect rk Nat) ->
              (s : Vect rk Nat) -> PrimArray a -> LArray s a
 
+||| A vector that is guaranteed to be unique through linear types.
+export
+LVector : Nat -> Type -> Type
+LVector n = LArray [n]
+
+||| A matrix that is guaranteed to be unique through linear types.
+export
+LMatrix : (m, n : Nat) -> Type -> Type
+LMatrix m n = LArray [m,n]
+
+||| A matrix that is guaranteed to be unique through linear types.
+export
+LMatrix' : Nat -> Type -> Type
+LMatrix' n = LArray [n,n]
+
+
 thaw : Array s a -> LArray s a
 thaw {s} arr with (viewShape arr)
   _ | Shape s = MkLArray (getOrder arr) (strides arr) s (getPrim arr)
 
+||| Freeze a linear array into an immutable array.
 export
 freeze : (1 _ : LArray s a) -> Array s a
 freeze (MkLArray ord sts s arr) = unsafeMkArray ord sts s arr
 
 
 --------------------------------------------------------------------------------
--- Constructor
+-- Constructors
 --------------------------------------------------------------------------------
 
 
