@@ -92,6 +92,7 @@ public export
 interface MultMonoid a => MultGroup a where
   constructor MkMultGroup
   ||| Calculate the inverse of the matrix or transformation.
+  |||
   ||| WARNING: This function will not check if an inverse exists for the given
   ||| input, and will happily divide by zero or return results containing NaN.
   ||| To avoid this, use `tryInverse` instead.

@@ -2,8 +2,7 @@
 
 NumIdr is a linear algebra and data manipulation library for Idris 2. It features
 an efficient, type-safe array data structure, as well as utilities for working with
-vector spaces and matrices. It borrows concepts heavily from Python's [NumPy](https://numpy.org/),
-as well as Rust's [nalgebra](https://www.nalgebra.org/).
+vector spaces and matrices.
 
 The name is pronounced like "num-idge".
 
@@ -19,9 +18,12 @@ The name is pronounced like "num-idge".
 - Transform types for working with rotations, reflections, isometries, and other
   types of affine maps.
 
-## Planned Features
+## Inspiration
 
-- An IO-based mutable array type, useful for writing more efficient code.
+NumIdr is inspired by many different data science and linear algebra libraries,
+including Python's [NumPy](https://numpy.org/), Rust's [nalgebra](https://www.nalgebra.org/),
+and Haskell's [massiv](https://hackage.haskell.org/package/massiv). It aims to
+combine the most useful features of each library.
 
 ## Documentation
 

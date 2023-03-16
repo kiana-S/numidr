@@ -6,6 +6,7 @@ import Data.Permutation
 import Data.NumIdr.Interfaces
 import public Data.NumIdr.Array
 import Data.NumIdr.Vector
+import Data.NumIdr.LArray
 
 %default total
 
@@ -20,7 +21,7 @@ Matrix m n = Array [m,n]
 ||| A synonym for a square matrix with dimensions of length `n`.
 public export
 Matrix' : Nat -> Type -> Type
-Matrix' n = Matrix n n
+Matrix' n = Array [n,n]
 
 
 --------------------------------------------------------------------------------
