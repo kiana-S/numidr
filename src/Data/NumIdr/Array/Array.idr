@@ -10,6 +10,7 @@ import Data.NumIdr.Interfaces
 import Data.NumIdr.PrimArray
 import Data.NumIdr.Array.Order
 import Data.NumIdr.Array.Coords
+import Data.NumIdr.Array.Shape
 
 %default total
 
@@ -409,6 +410,34 @@ indexUnsafe is arr = index (getLocation' (strides arr) is) (getPrim arr)
 export %inline
 (!#) : Array {rk} s a -> Vect rk Nat -> a
 arr !# is = indexUnsafe is arr
+
+
+||| Index the array using the given range of coordinates, returning a new array.
+||| WARNING: This function does not perform any bounds check on its inputs.
+||| Misuse of this function can easily break memory safety.
+export
+indexRangeUnsafe : (rs : Vect rk CRangeNB) -> Array s a -> Array (newShape s rs) a
+indexRangeUnsafe {s} rs arr with (viewShape arr)
+  _ | Shape s =
+    let ord = getOrder arr
+        sts = calcStrides ord s'
+    in  MkArray ord sts s'
+          (unsafeFromIns (product s') $
+            map (\(is,is') => (getLocation' sts is',
+                                index (getLocation' (strides arr) is) (getPrim arr)))
+            $ getCoordsList s rs)
+  where s' : Vect ? Nat
+        s' = newShape s rs
+
+||| Index the array using the given range of coordinates, returning a new array.
+||| WARNING: This function does not perform any bounds check on its inputs.
+||| Misuse of this function can easily break memory safety.
+|||
+||| This is the operator form of `indexRangeUnsafe`.
+export %inline
+(!#..) : Array s a -> (rs : Vect rk CRangeNB) -> Array (newShape s rs) a
+arr !#.. is = indexRangeUnsafe is arr
+
 
 
 --------------------------------------------------------------------------------
