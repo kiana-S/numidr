@@ -2,6 +2,7 @@ module Data.NumIdr.Array.Coords
 
 import Data.Either
 import Data.List
+import Data.List1
 import Data.Vect
 import Data.NP
 
@@ -53,11 +54,6 @@ namespace Strict
     Bounds : Fin (S n) -> Fin (S n) -> CRange n
     Indices : List (Fin n) -> CRange n
     Filter : (Fin n -> Bool) -> CRange n
-
-  infix 0 ...
-  public export
-  (...) : Fin (S n) -> Fin (S n) -> CRange n
-  (...) = Bounds
 
 
   public export
@@ -197,3 +193,14 @@ namespace NB
       go : {0 rk : _} -> Vect rk Nat -> Vect rk CRangeNB -> List (Vect rk Nat)
       go [] [] = [[]]
       go (d :: s) (r :: rs) = [| cRangeNBToList d r :: go s rs |]
+
+
+export
+getAllCoords' : Vect rk Nat -> List (Vect rk Nat)
+getAllCoords' = traverse (\case Z => []; S n => [0..n])
+
+export
+getAllCoords : (s : Vect rk Nat) -> List (Coords s)
+getAllCoords [] = [[]]
+getAllCoords (Z :: s) = []
+getAllCoords (S d :: s) = [| forget (allFins d) :: getAllCoords s |]
