@@ -8,7 +8,7 @@ import Data.NP
 import Data.Permutation
 import Data.NumIdr.Interfaces
 import Data.NumIdr.PrimArray
-import Data.NumIdr.Array.Order
+import Data.NumIdr.Array.Rep
 import Data.NumIdr.Array.Coords
 import Data.NumIdr.Array.Shape
 
