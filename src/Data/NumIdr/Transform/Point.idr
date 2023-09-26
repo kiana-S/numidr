@@ -176,8 +176,7 @@ Traversable (Point n) where
 
 export
 Show a => Show (Point n a) where
-  showPrec d (MkPoint v) = showCon d "point" $
-    showArg $ PrimArray.toList $ getPrim v
+  showPrec d (MkPoint v) = showCon d "point" $ showArg $ elements v
 
 export
 Cast a b => Cast (Point n a) (Point n b) where

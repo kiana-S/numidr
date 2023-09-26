@@ -78,8 +78,7 @@ hmatrix : Num a => Matrix m n a -> Vector m a -> HMatrix m n a
 hmatrix {m,n} mat tr with (viewShape mat)
   _ | Shape [m,n] = indexSet [last,last] 1 $
                     resize [S m, S n] 0 $
-                    mat `hconcat` reshape
-                      {ok = sym $ multOneRightNeutral _} [m,1] tr
+                    mat `hconcat` hstack [tr]
 
 ||| Convert a regular matrix to a homogeneous matrix.
 export
@@ -120,8 +119,9 @@ getTranslationVector {m,n} mat with (viewShape mat)
 
 ||| Construct a homogeneous matrix that scales a vector by the input.
 export
-scalingH : {n : _} -> Num a => a -> HMatrix' n a
-scalingH x = indexSet [last,last] 1 $ repeatDiag x 0
+scalingH : {default B rep : Rep} -> RepConstraint rep a =>
+            {n : _} -> Num a => a -> HMatrix' n a
+scalingH x = indexSet [last,last] 1 $ repeatDiag {rep} x 0
 
 ||| Construct a homogeneous matrix that translates by the given vector.
 export
@@ -132,23 +132,27 @@ translationH {n} v with (viewShape v)
 
 ||| Construct a 2D homogeneous matrix that rotates by the given angle (in radians).
 export
-rotate2DH : Double -> HMatrix' 2 Double
-rotate2DH = matrixToH . rotate2D
+rotate2DH : {default B rep : Rep} -> RepConstraint rep Double =>
+            Double -> HMatrix' 2 Double
+rotate2DH = matrixToH . rotate2D {rep}
 
 ||| Construct a 3D homogeneous matrix that rotates around the x-axis.
 export
-rotate3DXH : Double -> HMatrix' 3 Double
-rotate3DXH = matrixToH . rotate3DX
+rotate3DXH : {default B rep : Rep} -> RepConstraint rep Double =>
+              Double -> HMatrix' 3 Double
+rotate3DXH = matrixToH . rotate3DX {rep}
 
 ||| Construct a 3D homogeneous matrix that rotates around the y-axis.
 export
-rotate3DYH : Double -> HMatrix' 3 Double
-rotate3DYH = matrixToH . rotate3DY
+rotate3DYH : {default B rep : Rep} -> RepConstraint rep Double =>
+              Double -> HMatrix' 3 Double
+rotate3DYH = matrixToH . rotate3DY {rep}
 
 ||| Construct a 3D homogeneous matrix that rotates around the z-axis.
 export
-rotate3DZH : Double -> HMatrix' 3 Double
-rotate3DZH = matrixToH . rotate3DZ
+rotate3DZH : {default B rep : Rep} -> RepConstraint rep Double =>
+              Double -> HMatrix' 3 Double
+rotate3DZH = matrixToH . rotate3DZ {rep}
 
 
 export
@@ -161,8 +165,8 @@ reflectXH = reflectH 0
 
 export
 reflectYH : {n : _} -> Neg a => HMatrix' (2 + n) a
-reflectYH = reflectH 0
+reflectYH = reflectH 1
 
 export
 reflectZH : {n : _} -> Neg a => HMatrix' (3 + n) a
-reflectZH = reflectH 0
+reflectZH = reflectH 2

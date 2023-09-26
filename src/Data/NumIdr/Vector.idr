@@ -32,43 +32,45 @@ dimEq v = cong head $ shapeEq v
 
 ||| Construct a vector from a `Vect`.
 export
-vector : Vect n a -> Vector n a
+vector : {default B rep : Rep} -> RepConstraint rep a => Vect n a -> Vector n a
 vector v = rewrite sym (lengthCorrect v)
-           in fromVect [length v] $          -- the order doesn't matter here, as
-           rewrite lengthCorrect v in        -- there is only 1 axis
-           rewrite multOneLeftNeutral n in v
+           in array {rep,s=[length v]} $
+           rewrite lengthCorrect v in v
 
 ||| Convert a vector into a `Vect`.
 export
 toVect : Vector n a -> Vect n a
-toVect v = believe_me $ Vect.fromList $ toList v
-
+toVect v = believe_me $ Vect.fromList $ Prelude.toList v
 
 ||| Return the `i`-th basis vector.
 export
-basis : Num a => {n : _} -> (i : Fin n) -> Vector n a
-basis i = fromFunction _ (\[j] => if i == j then 1 else 0)
+basis : {default B rep : Rep} -> RepConstraint rep a =>
+          Num a => {n : _} -> (i : Fin n) -> Vector n a
+basis i = fromFunction {rep} _ (\[j] => if i == j then 1 else 0)
 
 ||| The first basis vector.
 export
-basisX : {n : _} -> Num a => Vector (1 + n) a
-basisX = basis FZ
+basisX : {default B rep : Rep} -> RepConstraint rep a =>
+          {n : _} -> Num a => Vector (1 + n) a
+basisX = basis {rep} FZ
 
 ||| The second basis vector.
 export
-basisY : {n : _} -> Num a => Vector (2 + n) a
-basisY = basis (FS FZ)
+basisY : {default B rep : Rep} -> RepConstraint rep a =>
+          {n : _} -> Num a => Vector (2 + n) a
+basisY = basis {rep} (FS FZ)
 
 ||| The third basis vector.
 export
-basisZ : {n : _} -> Num a => Vector (3 + n) a
-basisZ = basis (FS (FS FZ))
-
+basisZ : {default B rep : Rep} -> RepConstraint rep a =>
+          {n : _} -> Num a => Vector (3 + n) a
+basisZ = basis {rep} (FS (FS FZ))
 
 ||| Calculate the 2D unit vector with the given angle off the x-axis.
 export
-unit2D : (ang : Double) -> Vector 2 Double
-unit2D ang = vector [cos ang, sin ang]
+unit2D : {default B rep : Rep} -> RepConstraint rep Double =>
+          (ang : Double) -> Vector 2 Double
+unit2D ang = vector {rep} [cos ang, sin ang]
 
 ||| Calculate the 3D unit vector corresponding to the given spherical coordinates,
 ||| where the polar axis is the z-axis.
@@ -76,8 +78,9 @@ unit2D ang = vector [cos ang, sin ang]
 ||| @ pol The polar angle of the vector
 ||| @ az  The azimuthal angle of the vector
 export
-unit3D : (pol, az : Double) -> Vector 3 Double
-unit3D pol az = vector [cos az * sin pol, sin az * sin pol, cos pol]
+unit3D : {default B rep : Rep} -> RepConstraint rep Double =>
+          (pol, az : Double) -> Vector 3 Double
+unit3D pol az = vector {rep} [cos az * sin pol, sin az * sin pol, cos pol]
 
 
 
@@ -142,9 +145,8 @@ export
 export
 swizzle : Vect n (Fin m) -> Vector m a -> Vector n a
 swizzle p v = rewrite sym (lengthCorrect p)
-              in fromFunction [length p] (\[i] =>
-                index (index (rewrite sym (lengthCorrect p) in i) p) v
-              )
+              in fromFunction {rep=_} @{getRepC v} [length p] (\[i] =>
+                index (index (rewrite sym (lengthCorrect p) in i) p) v)
 
 
 ||| Swap two coordinates in a vector.
@@ -167,7 +169,6 @@ permuteCoords = permuteInAxis 0
 export
 (++) : Vector m a -> Vector n a -> Vector (m + n) a
 (++) = concat 0
-
 
 ||| Calculate the dot product of the two vectors.
 export

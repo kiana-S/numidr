@@ -23,7 +23,7 @@ scalar x = fromVect _ [x]
 ||| Unwrap the single value from a scalar.
 export
 unwrap : Scalar a -> a
-unwrap = index 0 . getPrim
+unwrap s = s !# []
 
 
 export

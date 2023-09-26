@@ -152,18 +152,18 @@ indexUnsafe {rep = Delayed} is arr = assert_total $ case validateCoords s is of
   Just is' => arr is'
 
 export
-convertRep : {r1,r2,s : _} -> RepConstraint r1 a => RepConstraint r2 a => PrimArray r1 s a -> PrimArray r2 s a
-convertRep {r1 = Bytes o, r2 = Bytes o'} @{rc} arr = reorder @{rc} arr
-convertRep {r1 = Boxed o, r2 = Boxed o'} arr = reorder arr
-convertRep {r1 = Linked, r2 = Linked} arr = arr
-convertRep {r1 = Linked, r2 = Bytes COrder} @{_} @{rc} arr = fromList @{rc} s (collapse arr)
-convertRep {r1 = Linked, r2 = Boxed COrder} arr = fromList s (collapse arr)
-convertRep {r1 = Delayed, r2 = Delayed} arr = arr
-convertRep {r1, r2} arr = fromFunction s (\is => PrimArray.index is arr)
+convertRepPrim : {r1,r2,s : _} -> RepConstraint r1 a => RepConstraint r2 a => PrimArray r1 s a -> PrimArray r2 s a
+convertRepPrim {r1 = Bytes o, r2 = Bytes o'} @{rc} arr = reorder @{rc} arr
+convertRepPrim {r1 = Boxed o, r2 = Boxed o'} arr = reorder arr
+convertRepPrim {r1 = Linked, r2 = Linked} arr = arr
+convertRepPrim {r1 = Linked, r2 = Bytes COrder} @{_} @{rc} arr = fromList @{rc} s (collapse arr)
+convertRepPrim {r1 = Linked, r2 = Boxed COrder} arr = fromList s (collapse arr)
+convertRepPrim {r1 = Delayed, r2 = Delayed} arr = arr
+convertRepPrim {r1, r2} arr = fromFunction s (\is => PrimArray.index is arr)
 
 export
 fromVects : {rep : Rep} -> RepConstraint rep a => (s : Vect rk Nat) -> Vects s a -> PrimArray rep s a
-fromVects s v = convertRep {r1=Linked} v
+fromVects s v = convertRepPrim {r1=Linked} v
 
 export
 fromList : {rep : Rep} -> LinearRep rep => RepConstraint rep a => (s : Vect rk Nat) -> List a -> PrimArray rep s a
@@ -184,14 +184,14 @@ foldl : {rep,s : _} -> RepConstraint rep a => (b -> a -> b) -> b -> PrimArray re
 foldl {rep = Bytes _} = Bytes.foldl
 foldl {rep = Boxed _} = Boxed.foldl
 foldl {rep = Linked} = Linked.foldl
-foldl {rep = Delayed} = \f,z => Boxed.foldl f z . convertRep {r1=Delayed,r2=B}
+foldl {rep = Delayed} = \f,z => Boxed.foldl f z . convertRepPrim {r1=Delayed,r2=B}
 
 export
 foldr : {rep,s : _} -> RepConstraint rep a => (a -> b -> b) -> b -> PrimArray rep s a -> b
 foldr {rep = Bytes _} = Bytes.foldr
 foldr {rep = Boxed _} = Boxed.foldr
 foldr {rep = Linked} = Linked.foldr
-foldr {rep = Delayed} = \f,z => Boxed.foldr f z . convertRep {r1=Delayed,r2=B}
+foldr {rep = Delayed} = \f,z => Boxed.foldr f z . convertRepPrim {r1=Delayed,r2=B}
 
 export
 traverse : {rep,s : _} -> Applicative f => RepConstraint rep a => RepConstraint rep b =>
@@ -199,6 +199,6 @@ traverse : {rep,s : _} -> Applicative f => RepConstraint rep a => RepConstraint 
 traverse {rep = Bytes o} = Bytes.traverse
 traverse {rep = Boxed o} = Boxed.traverse
 traverse {rep = Linked} = Linked.traverse
-traverse {rep = Delayed} = \f => map (convertRep @{()} @{()} {r1=B,r2=Delayed}) .
+traverse {rep = Delayed} = \f => map (convertRepPrim @{()} @{()} {r1=B,r2=Delayed}) .
                                   Boxed.traverse f .
-                                  convertRep @{()} @{()} {r1=Delayed,r2=B}
+                                  convertRepPrim @{()} @{()} {r1=Delayed,r2=B}

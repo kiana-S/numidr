@@ -101,6 +101,10 @@ export
 getMatrix : Transform ty n a -> Matrix' n a
 getMatrix (MkTrans _ mat) = getMatrix mat
 
+export
+convertRep : (rep : Rep) -> RepConstraint rep a => Transform ty n a -> Transform ty n a
+convertRep rep (MkTrans _ mat) = MkTrans _ (convertRep rep mat)
+
 ||| Linearize a transform by removing its translation component.
 ||| If the transform is already linear, then this function does nothing.
 export

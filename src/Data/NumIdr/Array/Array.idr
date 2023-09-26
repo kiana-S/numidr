@@ -70,6 +70,7 @@ export
 getRep : Array s a -> Rep
 getRep (MkArray rep _ _) = rep
 
+export
 getRepC : (arr : Array s a) -> RepConstraint (getRep arr) a
 getRepC (MkArray _ @{rc} _ _) = rc
 
@@ -242,7 +243,7 @@ export
 indexSetRange : (rs : CoordsRange s) -> Array (newShape rs) a ->
                   Array s a -> Array s a
 indexSetRange rs (MkArray _ _ rpl) (MkArray rep s arr) =
-  MkArray rep s (PrimArray.indexSetRange {rep} rs (convertRep rpl) arr)
+  MkArray rep s (PrimArray.indexSetRange {rep} rs (convertRepPrim rpl) arr)
 
 
 ||| Update the sub-array at the given range of coordinates by applying
@@ -302,7 +303,7 @@ arr !?.. rs = indexRangeNB rs arr
 ||| Index the array using the given coordinates.
 ||| WARNING: This function does not perform any bounds check on its inputs.
 ||| Misuse of this function can easily break memory safety.
-export
+export %unsafe
 indexUnsafe : Vect rk Nat -> Array {rk} s a -> a
 indexUnsafe is (MkArray _ _ arr) = PrimArray.indexUnsafe is arr
 
@@ -311,7 +312,7 @@ indexUnsafe is (MkArray _ _ arr) = PrimArray.indexUnsafe is arr
 ||| Misuse of this function can easily break memory safety.
 |||
 ||| This is the operator form of `indexUnsafe`.
-export %inline
+export %inline %unsafe
 (!#) : Array {rk} s a -> Vect rk Nat -> a
 arr !# is = indexUnsafe is arr
 
@@ -371,10 +372,10 @@ reshape : (s' : Vect rk' Nat) -> (arr : Array {rk} s a) -> LinearRep (getRep arr
             (0 ok : product s = product s') => Array s' a
 reshape s' (MkArray rep _ arr) = MkArray rep s' (PrimArray.reshape s' arr)
 
-||| Change the internal order of the array's elements.
+||| Change the internal representation of the array's elements.
 export
 convertRep : (rep : Rep) -> RepConstraint rep a => Array s a -> Array s a
-convertRep rep (MkArray _ s arr) = MkArray rep s (PrimArray.convertRep arr)
+convertRep rep (MkArray _ s arr) = MkArray rep s (convertRepPrim arr)
 
 ||| Resize the array to a new shape, preserving the coordinates of the original
 ||| elements. New coordinates are filled with a default value.
@@ -563,7 +564,7 @@ export
 Functor (Array s) where
   map f (MkArray rep @{rc} s arr) = MkArray (forceRepNC rep) @{forceRepConstraint} s
                                 (mapPrim @{forceRepConstraint} @{forceRepConstraint} f
-                                  $ convertRep @{rc} @{forceRepConstraint} arr)
+                                  $ convertRepPrim @{rc} @{forceRepConstraint} arr)
 
 export
 {s : _} -> Applicative (Array s) where
@@ -591,7 +592,7 @@ Traversable (Array s) where
     map (MkArray (forceRepNC rep) @{forceRepConstraint} s)
       (PrimArray.traverse {rep=forceRepNC rep}
         @{%search} @{forceRepConstraint} @{forceRepConstraint} f
-        (PrimArray.convertRep @{rc} @{forceRepConstraint} arr))
+        (convertRepPrim @{rc} @{forceRepConstraint} arr))
 
 
 export
