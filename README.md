@@ -32,9 +32,17 @@ an in-depth tutorial on NumIdr's features, though that is not available yet.
 
 ## Usage
 
-Basic package install:
+To install using idris2 directly:
 
-``` shell
+``` sh
+git clone https://github.com/kiana-S/numidr
+cd numidr
 idris2 --install numidr.ipkg
+
 ```
 
+Or you can install using pack:
+
+``` sh
+pack install numidr
+```
