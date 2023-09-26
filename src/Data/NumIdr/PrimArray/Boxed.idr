@@ -62,7 +62,7 @@ unsafeFromIns s ins = arrayAction s $ \arr =>
 export
 create : {o : _} -> (s : Vect rk Nat) -> (Nat -> a) -> PrimArrayBoxed o s a
 create s f = arrayAction s $ \arr =>
-    for_ [0..pred (product s)] $ \i => arrayDataSet i (f i) arr
+    for_ (range 0 (product s)) $ \i => arrayDataSet i (f i) arr
 
 ||| Index into a primitive array. This function is unsafe, as it performs no
 ||| boundary check on the index given.
@@ -88,7 +88,7 @@ export
 bytesToBoxed : {s : _} -> ByteRep a => PrimArrayBytes o s -> PrimArrayBoxed o s a
 bytesToBoxed (MkPABytes sts buf) = MkPABoxed sts $ unsafePerformIO $ do
   arr <- newArrayData (product s) (believe_me ())
-  for_ [0..pred (product s)] $ \i => arrayDataSet i !(readBuffer i buf) arr
+  for_ (range 0 (product s)) $ \i => arrayDataSet i !(readBuffer i buf) arr
   pure arr
 
 export
@@ -96,7 +96,7 @@ boxedToBytes : {s : _} -> ByteRep a => PrimArrayBoxed o s a -> PrimArrayBytes o 
 boxedToBytes @{br} (MkPABoxed sts arr) = MkPABytes sts $ unsafePerformIO $ do
   Just buf <- newBuffer $ cast (product s * bytes @{br})
     | Nothing => die "Cannot create array"
-  for_ [0..pred (product s)] $ \i => writeBuffer i !(arrayDataGet i arr) buf
+  for_ (range 0 (product s)) $ \i => writeBuffer i !(arrayDataGet i arr) buf
   pure buf
 
 
@@ -115,7 +115,7 @@ foldl f z (MkPABoxed sts arr) =
   if product s == 0 then z
   else unsafePerformIO $ do
     ref <- newIORef z
-    for_ [0..pred $ product s] $ \n => do
+    for_ (range 0 (product s)) $ \n => do
         x <- readIORef ref
         y <- arrayDataGet n arr
         writeIORef ref (f x y)
@@ -127,7 +127,7 @@ foldr f z (MkPABoxed sts arr) =
   if product s == 0 then z
   else unsafePerformIO $ do
     ref <- newIORef z
-    for_ [pred $ product s..0] $ \n => do
+    for_ (range 0 (product s)) $ \n => do
          x <- arrayDataGet n arr
          y <- readIORef ref
          writeIORef ref (f x y)
@@ -137,99 +137,3 @@ export
 traverse : {o,s : _} -> Applicative f => (a -> f b) -> PrimArrayBoxed o s a -> f (PrimArrayBoxed o s b)
 traverse f = map (Boxed.fromList _) . traverse f . foldr (::) []
 
-{-
-export
-updateAt : Nat -> (a -> a) -> PrimArrayBoxed o s a -> PrimArrayBoxed o s a
-updateAt n f arr = if n >= length arr then arr else
-  unsafePerformIO $ do
-    let cpy = copy arr
-    x <- arrayDataGet n cpy.content
-    arrayDataSet n (f x) cpy.content
-    pure cpy
-
-export
-unsafeUpdateInPlace : Nat -> (a -> a) -> PrimArrayBoxed a -> PrimArrayBoxed a
-unsafeUpdateInPlace n f arr = unsafePerformIO $ do
-  x <- arrayDataGet n arr.content
-  arrayDataSet n (f x) arr.content
-  pure arr
-
-||| Convert a primitive array to a list.
-export
-toList : PrimArrayBoxed a -> List a
-toList arr = iter (length arr) []
-  where
-    iter : Nat -> List a -> List a
-    iter Z acc = acc
-    iter (S n) acc = let el = index n arr
-                     in  iter n (el :: acc)
-
-||| Construct a primitive array from a list.
-export
-fromList : List a -> PrimArrayBoxed a
-fromList xs = create (length xs)
-    (\n => assert_total $ fromJust $ getAt n xs)
-  where
-    partial
-    fromJust : Maybe a -> a
-    fromJust (Just x) = x
-
-
-
-export
-unsafeZipWith : (a -> b -> c) -> PrimArrayBoxed a -> PrimArrayBoxed b -> PrimArrayBoxed c
-unsafeZipWith f a b = create (length a) (\n => f (index n a) (index n b))
-
-export
-unsafeZipWith3 : (a -> b -> c -> d) ->
-                 PrimArrayBoxed a -> PrimArrayBoxed b -> PrimArrayBoxed c -> PrimArrayBoxed d
-unsafeZipWith3 f a b c = create (length a) (\n => f (index n a) (index n b) (index n c))
-
-export
-unzipWith : (a -> (b, c)) -> PrimArrayBoxed a -> (PrimArrayBoxed b, PrimArrayBoxed c)
-unzipWith f arr = (map (fst . f) arr, map (snd . f) arr)
-
-export
-unzipWith3 : (a -> (b, c, d)) -> PrimArrayBoxed a -> (PrimArrayBoxed b, PrimArrayBoxed c, PrimArrayBoxed d)
-unzipWith3 f arr = (map ((\(x,_,_) => x) . f) arr,
-                          map ((\(_,y,_) => y) . f) arr,
-                          map ((\(_,_,z) => z) . f) arr)
-
-
-export
-foldl : (b -> a -> b) -> b -> PrimArrayBoxed a -> b
-foldl f z (MkPABoxed size arr) =
-  if size == 0 then z
-  else unsafePerformIO $ do
-    ref <- newIORef z
-    for_ [0..pred size] $ \n => do
-        x <- readIORef ref
-        y <- arrayDataGet n arr
-        writeIORef ref (f x y)
-    readIORef ref
-
-export
-foldr : (a -> b -> b) -> b -> PrimArrayBoxed a -> b
-foldr f z (MkPABoxed size arr) =
-  if size == 0 then z
-  else unsafePerformIO $ do
-    ref <- newIORef z
-    for_ [pred size..0] $ \n => do
-         x <- arrayDataGet n arr
-         y <- readIORef ref
-         writeIORef ref (f x y)
-    readIORef ref
-
-export
-traverse : Applicative f => (a -> f b) -> PrimArrayBoxed a -> f (PrimArrayBoxed b)
-traverse f = map fromList . traverse f . toList
-
-
-||| Compares two primitive arrays for equal elements. This function assumes the
-||| arrays have the same length; it must not be used in any other case.
-export
-unsafeEq : Eq a => PrimArrayBoxed a -> PrimArrayBoxed a -> Bool
-unsafeEq a b = unsafePerformIO $
-                 map (concat @{All}) $ for [0..pred (arraySize a)] $
-                 \n => (==) <$> arrayDataGet n (content a) <*> arrayDataGet n (content b)
--}

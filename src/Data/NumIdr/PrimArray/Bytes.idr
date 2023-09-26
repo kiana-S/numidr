@@ -48,8 +48,7 @@ bufferAction @{br} s action = fromBuffer s $ unsafePerformIO $ do
 export
 constant : {o : _} -> ByteRep a => (s : Vect rk Nat) -> a -> PrimArrayBytes o s
 constant @{br} s x = bufferAction @{br} s $ \buf => do
-  let size = product s
-  for_ [0..pred size] $ \i => writeBuffer i x buf
+  for_ (range 0 (product s)) $ \i => writeBuffer i x buf
 
 export
 unsafeDoIns : ByteRep a => List (Nat, a) -> PrimArrayBytes o s -> IO ()
@@ -63,8 +62,7 @@ unsafeFromIns @{br} s ins = bufferAction @{br} s $ \buf =>
 export
 create : {o : _} -> ByteRep a => (s : Vect rk Nat) -> (Nat -> a) -> PrimArrayBytes o s
 create @{br} s f = bufferAction @{br} s $ \buf => do
-  let size = product s
-  for_ [0..pred size] $ \i => writeBuffer i (f i) buf
+  for_ (range 0 (product s)) $ \i => writeBuffer i (f i) buf
 
 export
 index : ByteRep a => Nat -> PrimArrayBytes o s -> a
@@ -102,7 +100,7 @@ foldl f z (MkPABytes sts buf) =
   if product s == 0 then z
   else unsafePerformIO $ do
     ref <- newIORef z
-    for_ [0..pred $ product s] $ \n => do
+    for_ (range 0 (product s)) $ \n => do
         x <- readIORef ref
         y <- readBuffer n buf
         writeIORef ref (f x y)
