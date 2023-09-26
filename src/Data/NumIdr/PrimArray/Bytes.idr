@@ -2,168 +2,12 @@ module Data.NumIdr.PrimArray.Bytes
 
 import System
 import Data.IORef
-import Data.Bits
-import Data.So
 import Data.Buffer
 import Data.Vect
 import Data.NumIdr.Array.Coords
 import Data.NumIdr.Array.Rep
 
 %default total
-
-
-public export
-interface ByteRep a where
-  bytes : Nat
-
-  toBytes : a -> Vect bytes Bits8
-  fromBytes : Vect bytes Bits8 -> a
-
-export
-ByteRep Bits8 where
-  bytes = 1
-
-  toBytes x = [x]
-  fromBytes [x] = x
-
-export
-ByteRep Bits16 where
-  bytes = 2
-
-  toBytes x = [cast (x `shiftR` 8), cast x]
-  fromBytes [b1,b2] = cast b1 `shiftL` 8 .|. cast b2
-
-export
-ByteRep Bits32 where
-  bytes = 4
-
-  toBytes x = [cast (x `shiftR` 24),
-               cast (x `shiftR` 16),
-               cast (x `shiftR` 8),
-               cast x]
-  fromBytes [b1,b2,b3,b4] =
-    cast b1 `shiftL` 24 .|.
-    cast b2 `shiftL` 16 .|.
-    cast b3 `shiftL` 8 .|.
-    cast b4
-
-export
-ByteRep Bits64 where
-  bytes = 8
-
-  toBytes x = [cast (x `shiftR` 56),
-               cast (x `shiftR` 48),
-               cast (x `shiftR` 40),
-               cast (x `shiftR` 32),
-               cast (x `shiftR` 24),
-               cast (x `shiftR` 16),
-               cast (x `shiftR` 8),
-               cast x]
-  fromBytes [b1,b2,b3,b4,b5,b6,b7,b8] =
-    cast b1 `shiftL` 56 .|.
-    cast b2 `shiftL` 48 .|.
-    cast b3 `shiftL` 40 .|.
-    cast b4 `shiftL` 32 .|.
-    cast b5 `shiftL` 24 .|.
-    cast b6 `shiftL` 16 .|.
-    cast b7 `shiftL` 8 .|.
-    cast b8
-
-export
-ByteRep Int where
-  bytes = 8
-
-  toBytes x = [cast (x `shiftR` 56),
-               cast (x `shiftR` 48),
-               cast (x `shiftR` 40),
-               cast (x `shiftR` 32),
-               cast (x `shiftR` 24),
-               cast (x `shiftR` 16),
-               cast (x `shiftR` 8),
-               cast x]
-  fromBytes [b1,b2,b3,b4,b5,b6,b7,b8] =
-    cast b1 `shiftL` 56 .|.
-    cast b2 `shiftL` 48 .|.
-    cast b3 `shiftL` 40 .|.
-    cast b4 `shiftL` 32 .|.
-    cast b5 `shiftL` 24 .|.
-    cast b6 `shiftL` 16 .|.
-    cast b7 `shiftL` 8 .|.
-    cast b8
-
-export
-ByteRep Int8 where
-  bytes = 1
-
-  toBytes x = [cast x]
-  fromBytes [x] = cast x
-
-export
-ByteRep Int16 where
-  bytes = 2
-
-  toBytes x = [cast (x `shiftR` 8), cast x]
-  fromBytes [b1,b2] = cast b1 `shiftL` 8 .|. cast b2
-
-export
-ByteRep Int32 where
-  bytes = 4
-
-  toBytes x = [cast (x `shiftR` 24),
-               cast (x `shiftR` 16),
-               cast (x `shiftR` 8),
-               cast x]
-  fromBytes [b1,b2,b3,b4] =
-    cast b1 `shiftL` 24 .|.
-    cast b2 `shiftL` 16 .|.
-    cast b3 `shiftL` 8 .|.
-    cast b4
-
-export
-ByteRep Int64 where
-  bytes = 8
-
-  toBytes x = [cast (x `shiftR` 56),
-               cast (x `shiftR` 48),
-               cast (x `shiftR` 40),
-               cast (x `shiftR` 32),
-               cast (x `shiftR` 24),
-               cast (x `shiftR` 16),
-               cast (x `shiftR` 8),
-               cast x]
-  fromBytes [b1,b2,b3,b4,b5,b6,b7,b8] =
-    cast b1 `shiftL` 56 .|.
-    cast b2 `shiftL` 48 .|.
-    cast b3 `shiftL` 40 .|.
-    cast b4 `shiftL` 32 .|.
-    cast b5 `shiftL` 24 .|.
-    cast b6 `shiftL` 16 .|.
-    cast b7 `shiftL` 8 .|.
-    cast b8
-
-export
-ByteRep Bool where
-  bytes = 1
-
-  toBytes b = [if b then 1 else 0]
-  fromBytes [x] = x /= 0
-
-export
-ByteRep a => ByteRep b => ByteRep (a, b) where
-  bytes = bytes {a} + bytes {a=b}
-
-  toBytes (x,y) = toBytes x ++ toBytes y
-  fromBytes = bimap fromBytes fromBytes . splitAt _
-
-export
-{n : _} -> ByteRep a => ByteRep (Vect n a) where
-  bytes = n * bytes {a}
-
-  toBytes xs = concat $ map toBytes xs
-  fromBytes {n = 0} bs = []
-  fromBytes {n = S n} bs =
-    let (bs1, bs2) = splitAt _ bs
-    in  fromBytes bs1 :: fromBytes bs2
 
 
 export
@@ -227,6 +71,15 @@ index : ByteRep a => Nat -> PrimArrayBytes o s -> a
 index i (MkPABytes _ buf) = unsafePerformIO $ readBuffer i buf
 
 export
+copy : {o,s : _} -> PrimArrayBytes o s -> PrimArrayBytes o s
+copy (MkPABytes sts buf) =
+  MkPABytes sts (unsafePerformIO $ do
+    Just buf' <- newBuffer !(rawSize buf)
+      | Nothing => die "Cannot create array"
+    copyData buf 0 !(rawSize buf) buf' 0
+    pure buf)
+
+export
 reorder : {o,o',s : _} -> ByteRep a => PrimArrayBytes o s -> PrimArrayBytes o' s
 reorder @{br} arr@(MkPABytes sts buf) =
   if o == o' then MkPABytes sts buf
@@ -242,3 +95,31 @@ fromList @{br} s xs = bufferAction @{br} s $ go xs 0
     go : List a -> Nat -> Buffer -> IO ()
     go [] _ buf = pure ()
     go (x :: xs) i buf = writeBuffer i x buf >> go xs (S i) buf
+
+export
+foldl : {s : _} -> ByteRep a => (b -> a -> b) -> b -> PrimArrayBytes o s -> b
+foldl f z (MkPABytes sts buf) =
+  if product s == 0 then z
+  else unsafePerformIO $ do
+    ref <- newIORef z
+    for_ [0..pred $ product s] $ \n => do
+        x <- readIORef ref
+        y <- readBuffer n buf
+        writeIORef ref (f x y)
+    readIORef ref
+
+export
+foldr : {s : _} -> ByteRep a => (a -> b -> b) -> b -> PrimArrayBytes o s -> b
+foldr f z (MkPABytes sts buf) =
+  if product s == 0 then z
+  else unsafePerformIO $ do
+    ref <- newIORef z
+    for_ [pred $ product s..0] $ \n => do
+         x <- readBuffer n buf
+         y <- readIORef ref
+         writeIORef ref (f x y)
+    readIORef ref
+
+export
+traverse : {o,s : _} -> ByteRep a => ByteRep b => Applicative f => (a -> f b) -> PrimArrayBytes o s -> f (PrimArrayBytes o s)
+traverse f = map (Bytes.fromList _) . traverse f . foldr (::) []

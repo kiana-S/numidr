@@ -2,6 +2,7 @@ module Data.NumIdr.PrimArray.Boxed
 
 import Data.Buffer
 import System
+import Data.IORef
 import Data.IOArray.Prims
 import Data.Vect
 import Data.NumIdr.Array.Rep
@@ -108,6 +109,34 @@ fromList s xs = arrayAction s $ go xs 0
     go (x :: xs) i buf = arrayDataSet i x buf >> go xs (S i) buf
 
 
+export
+foldl : {s : _} -> (b -> a -> b) -> b -> PrimArrayBoxed o s a -> b
+foldl f z (MkPABoxed sts arr) =
+  if product s == 0 then z
+  else unsafePerformIO $ do
+    ref <- newIORef z
+    for_ [0..pred $ product s] $ \n => do
+        x <- readIORef ref
+        y <- arrayDataGet n arr
+        writeIORef ref (f x y)
+    readIORef ref
+
+export
+foldr : {s : _} -> (a -> b -> b) -> b -> PrimArrayBoxed o s a -> b
+foldr f z (MkPABoxed sts arr) =
+  if product s == 0 then z
+  else unsafePerformIO $ do
+    ref <- newIORef z
+    for_ [pred $ product s..0] $ \n => do
+         x <- arrayDataGet n arr
+         y <- readIORef ref
+         writeIORef ref (f x y)
+    readIORef ref
+
+export
+traverse : {o,s : _} -> Applicative f => (a -> f b) -> PrimArrayBoxed o s a -> f (PrimArrayBoxed o s b)
+traverse f = map (Boxed.fromList _) . traverse f . foldr (::) []
+
 {-
 export
 updateAt : Nat -> (a -> a) -> PrimArrayBoxed o s a -> PrimArrayBoxed o s a
@@ -145,10 +174,6 @@ fromList xs = create (length xs)
     fromJust : Maybe a -> a
     fromJust (Just x) = x
 
-||| Map a function over a primitive array.
-export
-map : (a -> b) -> PrimArrayBoxed a -> PrimArrayBoxed b
-map f arr = create (length arr) (\n => f $ index n arr)
 
 
 export

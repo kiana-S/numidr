@@ -26,6 +26,11 @@ public export
       elems {all=[_]} [x] = show x
       elems {all=_::_} (x :: xs) = show x ++ ", " ++ elems xs
 
+-- use this when idris can't figure out the constraint above
+public export
+eqNP : forall f. (forall t. Eq (f t)) => (x, y : NP f ts) -> Bool
+eqNP [] [] = True
+eqNP (x :: xs) (y :: ys) = x == y && eqNP xs ys
 
 
 public export

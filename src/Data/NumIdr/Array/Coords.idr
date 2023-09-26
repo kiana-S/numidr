@@ -43,6 +43,11 @@ toNB : Coords {rk} s -> Vect rk Nat
 toNB [] = []
 toNB (i :: is) = finToNat i :: toNB is
 
+export
+validateCoords : (s : Vect rk Nat) -> Vect rk Nat -> Maybe (Coords s)
+validateCoords [] [] = Just []
+validateCoords (d :: s) (i :: is) = (::) <$> natToFin i d <*> validateCoords s is
+
 
 namespace Strict
   public export
@@ -155,6 +160,44 @@ namespace Strict
 
 namespace NB
   export
+  validateCRange : (s : Vect rk Nat) -> Vect rk CRangeNB -> Maybe (CoordsRange s)
+  validateCRange [] [] = Just []
+  validateCRange (d :: s) (r :: rs) = [| validate' d r :: validateCRange s rs |]
+    where
+      validate' : (n : Nat) -> CRangeNB -> Maybe (CRange n)
+      validate' n All = Just All
+      validate' n (StartBound x) =
+        case isLTE x n of
+          Yes _ => Just (StartBound (natToFinLT x))
+          _ => Nothing
+      validate' n (EndBound x) =
+        case isLTE x n of
+          Yes _ => Just (EndBound (natToFinLT x))
+          _ => Nothing
+      validate' n (Bounds x y) =
+        case (isLTE x n, isLTE y n) of
+          (Yes _, Yes _) => Just (Bounds (natToFinLT x) (natToFinLT y))
+          _ => Nothing
+      validate' n (Indices xs) = Indices <$> traverse
+        (\x => case isLT x n of
+                Yes _ => Just (natToFinLT x)
+                No _ => Nothing) xs
+      validate' n (Filter f) = Just (Filter (f . finToNat))
+
+  export %unsafe
+  assertCRange : (s : Vect rk Nat) -> Vect rk CRangeNB -> CoordsRange s
+  assertCRange [] [] = []
+  assertCRange (d :: s) (r :: rs) = assert' d r :: assertCRange s rs
+    where
+      assert' : (n : Nat) -> CRangeNB -> CRange n
+      assert' n All = All
+      assert' n (StartBound x) = StartBound (believe_me x)
+      assert' n (EndBound x) = EndBound (believe_me x)
+      assert' n (Bounds x y) = Bounds (believe_me x) (believe_me y)
+      assert' n (Indices xs) = Indices (believe_me <$> xs)
+      assert' n (Filter f) = Filter (f . finToNat)
+
+  public export
   cRangeNBToList : Nat -> CRangeNB -> List Nat
   cRangeNBToList s All = range 0 s
   cRangeNBToList s (StartBound x) = range x s
@@ -163,37 +206,10 @@ namespace NB
   cRangeNBToList s (Indices xs) = nub xs
   cRangeNBToList s (Filter p) = filter p $ range 0 s
 
-  export
-  validateCRangeNB : Nat -> CRangeNB -> Bool
-  validateCRangeNB s All = True
-  validateCRangeNB s (StartBound x) = x < s
-  validateCRangeNB s (EndBound x) = x <= s
-  validateCRangeNB s (Bounds x y) = x < s && y <= s
-  validateCRangeNB s (Indices xs) = all (<s) xs
-  validateCRangeNB s (Filter p) = True
-
   ||| Calculate the new shape given by a coordinate range.
-  export
+  public export
   newShape : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat
   newShape = zipWith (length .: cRangeNBToList)
-
-  export
-  validateShape : Vect rk Nat -> Vect rk CRangeNB -> Bool
-  validateShape = all id .: zipWith validateCRangeNB
-
-  export
-  getNewPos : Vect rk Nat -> Vect rk CRangeNB -> Vect rk Nat -> Vect rk Nat
-  getNewPos = zipWith3 (\d,r,i => assert_total $
-    case findIndex (==i) (cRangeNBToList d r) of Just x => cast x)
-
-  export
-  getCoordsList : Vect rk Nat -> Vect rk CRangeNB -> List (Vect rk Nat, Vect rk Nat)
-  getCoordsList s rs = map (\is => (is, getNewPos s rs is)) $ go s rs
-    where
-      go : {0 rk : _} -> Vect rk Nat -> Vect rk CRangeNB -> List (Vect rk Nat)
-      go [] [] = [[]]
-      go (d :: s) (r :: rs) = [| cRangeNBToList d r :: go s rs |]
-
 
 export
 getAllCoords' : Vect rk Nat -> List (Vect rk Nat)
