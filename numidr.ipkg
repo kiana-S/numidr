@@ -1,5 +1,6 @@
 package numidr
 version = 2.0.0
+brief = "Linear algebra and data science library"
 
 authors = "Kiana Sheibani"
 license = "MIT"
