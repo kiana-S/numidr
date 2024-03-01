@@ -12,10 +12,10 @@ import Data.Buffer
 --------------------------------------------------------------------------------
 
 
-||| An order is an abstract representation of the way in which array
-||| elements are stored in memory. Orders are used to calculate strides,
-||| which provide a method of converting an array coordinate into a linear
-||| memory location.
+||| An order is an abstract representation of the way in which contiguous array
+||| elements are stored in memory. Orders are used to calculate strides, which
+||| provide a method of converting an array coordinate into a linear memory
+||| location.
 public export
 data Order : Type where
   ||| C-like order, or contiguous order. This order stores elements in a
@@ -49,24 +49,57 @@ calcStrides FOrder v@(_::_)  = scanl (*) 1 $ init v
 --------------------------------------------------------------------------------
 
 
+||| An internal representation of an array.
+|||
+||| Each array internally stores its values based on one of these
+||| representations.
 public export
 data Rep : Type where
-  Bytes : Order -> Rep
-  Boxed : Order -> Rep
+  ||| Byte-buffer array representation.
+  |||
+  ||| This representations stores elements by converting them into byte values
+  ||| storing them in a `Buffer`. Use of this representation is only valid if
+  ||| the element type implements `ByteRep`.
+  |||
+  ||| @ o The order to store array elements in
+  Bytes : (o : Order) -> Rep
+
+  ||| Boxed array representation.
+  |||
+  ||| This representation uses a boxed array type to store its elements.
+  |||
+  ||| @ o The order to store array elements in
+  Boxed : (o : Order) -> Rep
+
+  ||| Linked list array representation.
+  |||
+  ||| This representation uses Idris's standard linked list types to store its
+  ||| elements.
   Linked : Rep
+
+  ||| Delayed/Lazy array representation.
+  |||
+  ||| This representation delays the computation of the array's elements, which
+  ||| may be useful in writing efficient algorithms.
   Delayed : Rep
 
 %name Rep rep
 
 
+||| An alias for the representation `Boxed COrder`, the C-like boxed array
+||| representation.
+|||
+||| This representation is the default for all newly created arrays.
 public export
 B : Rep
 B = Boxed COrder
 
+||| An alias for the representation `Linked COrder`.
 public export
 L : Rep
 L = Linked
 
+||| An alias for the representation `Delayed`.
 public export
 D : Rep
 D = Delayed
@@ -80,6 +113,8 @@ Eq Rep where
   Delayed == Delayed = True
   _ == _ = False
 
+||| A predicate on representations for those that store their elements
+||| linearly.
 public export
 data LinearRep : Rep -> Type where
   BytesIsL : LinearRep (Bytes o)
@@ -140,11 +175,19 @@ forceRepNCCorrect Delayed = DelayedNC
 --------------------------------------------------------------------------------
 
 
+||| An interface for elements that can be converted into raw bytes.
+|||
+||| An implementation of this interface is required to use the `Bytes` array
+||| representation.
 public export
 interface ByteRep a where
+  ||| The number of bytes used to store each value.
   bytes : Nat
 
+  ||| Convert a value into a list of bytes.
   toBytes : a -> Vect bytes Bits8
+
+  ||| Convert a list of bytes into a value.
   fromBytes : Vect bytes Bits8 -> a
 
 export
@@ -294,6 +337,11 @@ export
     in  fromBytes bs1 :: fromBytes bs2
 
 
+||| The constraint that each array representation requires.
+|||
+||| Currently, only the `Bytes` representation has a constraint, requiring an
+||| implementation of `ByteRep`. All other representations can be used without
+||| constraint.
 public export
 RepConstraint : Rep -> Type -> Type
 RepConstraint (Bytes _) a = ByteRep a
