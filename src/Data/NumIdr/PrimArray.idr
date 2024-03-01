@@ -3,7 +3,6 @@ module Data.NumIdr.PrimArray
 import Data.Buffer
 import Data.Vect
 import Data.Fin
-import Data.NP
 import Data.NumIdr.Array.Rep
 import Data.NumIdr.Array.Coords
 import public Data.NumIdr.PrimArray.Bytes
@@ -98,7 +97,7 @@ indexUpdate {rep = Linked} is f arr = update is f arr
 indexUpdate {rep = Delayed} is f arr =
   \is' =>
     let x = arr is'
-    in if eqNP is is' then f x else x
+    in if (==) @{eqCoords} is is' then f x else x
 
 export
 indexRange : {rep,s : _} -> RepConstraint rep a => (rs : CoordsRange s) -> PrimArray rep s a

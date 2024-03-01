@@ -2,7 +2,6 @@ module Data.NumIdr.PrimArray.Linked
 
 import Data.Vect
 import Data.DPair
-import Data.NP
 import Data.NumIdr.Array.Rep
 import Data.NumIdr.Array.Coords
 

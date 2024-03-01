@@ -3,7 +3,6 @@ module Data.NumIdr.Array.Array
 import Data.List
 import Data.Vect
 import Data.Zippable
-import Data.NP
 import Data.Permutation
 import Data.NumIdr.Interfaces
 import Data.NumIdr.PrimArray
@@ -411,7 +410,7 @@ resize s' def arr = fromFunction {rep=getRep arr} @{getRepC arr} s' (fromMaybe d
 export
 -- HACK: Come up with a solution that doesn't use `believe_me` or trip over some
 -- weird bug in the type-checker
-resizeLTE : (s' : Vect rk Nat) -> (0 ok : NP Prelude.id (zipWith LTE s' s)) =>
+resizeLTE : (s' : Vect rk Nat) -> (0 ok : All Prelude.id (zipWith LTE s' s)) =>
             Array {rk} s a -> Array s' a
 resizeLTE s' arr = resize s' (believe_me ()) arr
 

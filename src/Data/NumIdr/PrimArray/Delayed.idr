@@ -2,7 +2,6 @@ module Data.NumIdr.PrimArray.Delayed
 
 import Data.List
 import Data.Vect
-import Data.NP
 import Data.NumIdr.Array.Rep
 import Data.NumIdr.Array.Coords
 

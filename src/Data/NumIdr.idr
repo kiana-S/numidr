@@ -1,6 +1,5 @@
 module Data.NumIdr
 
-import public Data.NP
 import public Data.Permutation
 
 import public Data.NumIdr.Interfaces

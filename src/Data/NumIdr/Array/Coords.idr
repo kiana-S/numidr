@@ -4,7 +4,8 @@ import Data.Either
 import Data.List
 import Data.List1
 import Data.Vect
-import Data.NP
+
+import public Data.Vect.Quantifiers
 
 %default total
 
@@ -35,7 +36,16 @@ rangeLenZ x = rangeLen 0 x `trans` minusZeroRight x
 ||| values of `Fin dim`, where `dim` is the dimension of each axis.
 public export
 Coords : (s : Vect rk Nat) -> Type
-Coords = NP Fin
+Coords = All Fin
+
+
+-- Occasionally necessary for reasons of Idris not being great at
+-- resolving interface constraints
+public export
+[eqCoords] Eq (Coords s) where
+  [] == [] = True
+  (x :: xs) == (y :: ys) = x == y && xs == ys
+
 
 ||| Forget the shape of the array by converting each index to type `Nat`.
 export
@@ -63,7 +73,7 @@ namespace Strict
 
   public export
   CoordsRange : (s : Vect rk Nat) -> Type
-  CoordsRange = NP CRange
+  CoordsRange = All CRange
 
 
 namespace NB
