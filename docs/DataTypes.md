@@ -1,18 +1,18 @@
 # Fundamental Data Types
 
-Most of the data that NumIdr operates on is stored in arrays, but there are a few other types and structures that are important to understand.
+NumIdr exports a number of different datatypes. The most important type to be aware of is the _array_, but there are other useful types as well.
 
 ## Arrays
 
 ### What is an Array?
 
-In most programming languages and libraries, the word "array" is used to mean a one-dimensional list of values that is contiguous in memory. A typical array of integers may be written in list form like this:
+In most programming languages, the word "array" is used to mean a one-dimensional list of values that is contiguous in memory. A typical array of integers may be written in list form like this:
 
 ```
 [1, 4, 10, 2, -5, 18]
 ```
 
-In a typical one-dimensional array, elements are indexed by a single integer, starting at zero and increasing from left to right.
+In this kind of array, elements are indexed by a single integer, starting at zero and increasing from left to right.
 
 NumIdr, however, uses the word a bit more generally: a NumIdr array is a multi-dimensional structure that can be indexed by any number of integers. NumIdr arrays are written as nested lists:
 
@@ -63,7 +63,7 @@ A scalar is a rank-0 array, meaning that it is indexed by 0 integers. Its alias 
 
 ```idris
 Scalar : (a : Type) -> Type
-Scalar = Array []
+Scalar a = Array [] a
 ```
 
 A scalar has exactly one index, the empty list `[]`. This means that it is exactly the same as a single value and as such is largely pointless, but NumIdr still provides an alias for it just in case you need it.
@@ -74,10 +74,10 @@ A vector is a rank-1 array:
 
 ```idris
 Vector : (n : Nat) -> (a : Type) -> Type
-Vector n = Array [n]
+Vector n a = Array [n] a
 ```
 
-A vector's type signature and stored data is effectively identical to that of the standard library type `Vect`, whose elements are confusingly also called "vectors"; we often refer to these as "vects" to differentiate.
+A vector's type signature and stored data is effectively identical to that of the standard library type `Vect`, whose elements are confusingly also called "vectors"; we often refer to those as "vects" to differentiate.
 
 Indices are typically written as lists of integers, but for vectors it is occasionally acceptable to write the single index number without putting it inside a list. This is mostly the case for indexing, where each indexing function has an alternate definition specifically for vectors.
 
@@ -87,14 +87,14 @@ As mentioned before, a matrix is a rank-2 array:
 
 ```idris
 Matrix : (m, n : Nat) -> (a : Type) -> Type
-Matrix m n = Array [m, n]
+Matrix m n a = Array [m, n] a
 ```
 
 There is also an alias `Matrix'` for square matrices.
 
 ```idris
 Matrix' : (n : Nat) -> (a : Type) -> Type
-Matrix' n = Array [n, n]
+Matrix' n a = Array [n, n] a
 ```
 
 As a linear algebra library, the majority of the operations in NumIdr revolve around matrices.
@@ -105,14 +105,14 @@ NumIdr also provides aliases for homogeneous matrices:
 
 ```idris
 HMatrix : (m, n : Nat) -> (a : Type) -> Type
-HMatrix m n = Array [S m, S n]
+HMatrix m n a = Array [S m, S n] a
 
 HMatrix' : (n : Nat) -> (a : Type) -> Type
-HMatrix' n = Array [S n, S n]
+HMatrix' n a = Array [S n, S n] a
 
 -- To use with homogeneous matrices
 HVector : (n : Nat) -> (a : Type) -> Type
-HVector n = Array [S n]
+HVector n a = Array [S n] a
 ```
 
 These are useful for clarity when working with both homogeneous and non-homogeneous matrices.
@@ -130,16 +130,16 @@ Transform : (ty : TransType) -> (n : Nat) -> (a : Type) -> Type
 The `TransType` parameter dictates what kind of transform it is. These eight options are currently available:
 
 **Linear Types:**
-- Trivial (always the identity transformation)
-- Rotation
-- Orthonormal (rotation + reflection)
-- Linear
+- `Trivial` (always the identity transformation)
+- `Rotation`
+- `Orthonormal` (rotation + reflection)
+- `Linear`
 
 **Affine Types:**
-- Translation
-- Rigid (rotation + translation)
-- Isometry (rotation + reflection + translation)
-- Affine
+- `Translation`
+- `Rigid` (rotation + translation)
+- `Isometry` (rotation + reflection + translation)
+- `Affine`
 
 The `TransType` value is obtained by prepending a capital T to these names. For example, an isometry may have the type `Isometry 3 Double`, which is an alias for `Transform TIsometry 3 Double`.
 
@@ -152,3 +152,5 @@ In order to properly apply these transforms, the `Point` type must be used, whic
 ### Permutations
 
 The type `Permutation n` represents a permutation of `n` elements. Permutations are mostly used internally for various algorithms, but they are also an input in various operations, such as those that permute the axes of an array.
+
+[Contents](Intro.md) | [Next](Operations.md)
