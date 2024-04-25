@@ -171,22 +171,12 @@ fromFunction : {default B rep : Rep} -> RepConstraint rep a =>
                   (s : Vect rk Nat) -> (Coords s -> a) -> Array s a
 fromFunction s f = MkArray rep s (PrimArray.fromFunction s f)
 
-||| Construct an array using a structure of nested vectors. The elements are arranged
-||| to the specified order before being written.
-|||
-||| @ s   The shape of the constructed array
-||| @ ord The order of the constructed array
-export
-array' : {default B rep : Rep} -> RepConstraint rep a =>
-          (s : Vect rk Nat) -> Vects s a -> Array s a
-array' s v = MkArray rep s (fromVects s v)
-
 ||| Construct an array using a structure of nested vectors.
 ||| To explicitly specify the shape and order of the array, use `array'`.
 export
 array : {default B rep : Rep} -> RepConstraint rep a =>
           {s : Vect rk Nat} -> Vects s a -> Array s a
-array {rep} = array' {rep} _
+array v = MkArray rep s (fromVects s v)
 
 
 --------------------------------------------------------------------------------
