@@ -33,7 +33,7 @@ Matrix' n = Array [n,n]
 export
 matrix : {default B rep : Rep} -> RepConstraint rep a => {m, n : _} ->
           Vect m (Vect n a) -> Matrix m n a
-matrix x = array' {rep} [m,n] x
+matrix x = array {rep, s=[m,n]} x
 
 
 ||| Construct a matrix with a specific value along the diagonal.
