@@ -28,7 +28,7 @@ combine the most useful features of each library.
 ## Documentation
 
 Most of the exported utility functions have docstrings. There is also
-a (currently unfinished) tutorial of NumIdr's features [here](docs/Intro.md).
+a (currently unfinished) guide on how to use NumIdr [here](docs/Intro.md).
 
 ## Usage
 

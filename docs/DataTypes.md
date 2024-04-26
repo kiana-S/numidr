@@ -1,6 +1,6 @@
 # Fundamental Data Types
 
-NumIdr exports a number of different datatypes. The most important type to be aware of is the _array_, but there are other useful types as well.
+NumIdr exports a number of different datatypes. The most important type and the cornerstone of the library is the _array_, but there are other useful types as well.
 
 ## Arrays
 

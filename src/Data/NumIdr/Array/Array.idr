@@ -58,6 +58,11 @@ export
 shape : Array {rk} s a -> Vect rk Nat
 shape (MkArray _ s _) = s
 
+||| The size of the array, i.e. the total number of elements.
+export
+size : Array s a -> Nat
+size = product . shape
+
 ||| The rank of the array.
 export
 rank : Array s a -> Nat

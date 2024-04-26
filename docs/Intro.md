@@ -1,6 +1,6 @@
-# NumIdr Tutorial
+# NumIdr Guide
 
-Welcome to NumIdr's tutorial!
+Welcome to NumIdr's guide!
 
 If you're familiar with the Python library [NumPy](https://numpy.org/) or anything based on it, then a lot of the early content will be familiar, as NumIdr is based on the same array type.
 
