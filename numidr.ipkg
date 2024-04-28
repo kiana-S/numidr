@@ -12,11 +12,6 @@ readme = "README.md"
 
 modules = Data.Permutation,
           Data.NumIdr,
-          Data.NumIdr.PrimArray,
-          Data.NumIdr.PrimArray.Bytes,
-          Data.NumIdr.PrimArray.Boxed,
-          Data.NumIdr.PrimArray.Linked,
-          Data.NumIdr.PrimArray.Delayed,
           Data.NumIdr.Array,
           Data.NumIdr.Array.Array,
           Data.NumIdr.Array.Coords,
