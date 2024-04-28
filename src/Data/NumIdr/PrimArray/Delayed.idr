@@ -4,6 +4,7 @@ import Data.List
 import Data.Vect
 import Data.NumIdr.Array.Rep
 import Data.NumIdr.Array.Coords
+import Data.NumIdr.PrimArray.Linked
 
 %default total
 
@@ -21,8 +22,8 @@ export
 indexRange : {s : _} -> (rs : CoordsRange s) -> PrimArrayDelayed s a -> PrimArrayDelayed (newShape rs) a
 indexRange [] v = v
 indexRange (r :: rs) v with (cRangeToList r)
-  _ | Left i = indexRange rs (\is' => v (believe_me i :: is'))
-  _ | Right is = \(i::is') => indexRange rs (\is'' => v (believe_me (Vect.index i (fromList is)) :: is'')) is'
+  _ | Left i = indexRange rs (\is' => v (assertFin i :: is'))
+  _ | Right is = \(i::is') => indexRange rs (\is'' => v (assertFin (Vect.index i (fromList is)) :: is'')) is'
 
 export
 indexSetRange : {s : _} -> (rs : CoordsRange s) -> PrimArrayDelayed (newShape rs) a

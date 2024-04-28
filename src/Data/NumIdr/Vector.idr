@@ -40,7 +40,8 @@ vector v = rewrite sym (lengthCorrect v)
 ||| Convert a vector into a `Vect`.
 export
 toVect : Vector n a -> Vect n a
-toVect v = believe_me $ Vect.fromList $ Prelude.toList v
+toVect v = replace {p = flip Vect a} (believe_me $ Refl {x=()}) $
+  Vect.fromList $ Prelude.toList v
 
 ||| Return the `i`-th basis vector.
 export

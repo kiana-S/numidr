@@ -23,19 +23,25 @@ update : Coords s -> (a -> a) -> Vects s a -> Vects s a
 update [] f v = f v
 update (i :: is) f v = updateAt i (update is f) v
 
+export %unsafe
+assertFin : Nat -> Fin n
+assertFin n = natToFinLt n @{believe_me Oh}
+
 export
 indexRange : {s : _} -> (rs : CoordsRange s) -> Vects s a -> Vects (newShape rs) a
 indexRange [] v = v
 indexRange (r :: rs) v with (cRangeToList r)
-  _ | Left i = indexRange rs (Vect.index (believe_me i) v)
-  _ | Right is = believe_me $ map (\i => indexRange rs (Vect.index (believe_me i) v)) is
+  _ | Left i = indexRange rs (Vect.index (assertFin i) v)
+  _ | Right is = assert_total $
+        case toVect _ (map (\i => indexRange rs (Vect.index (assertFin i) v)) is) of
+          Just v => v
 
 export
 indexSetRange : {s : _} -> (rs : CoordsRange s) -> Vects (newShape rs) a -> Vects s a -> Vects s a
 indexSetRange {s=[]} [] rv _ = rv
 indexSetRange {s=_::_} (r :: rs) rv v with (cRangeToList r)
-  _ | Left i = updateAt (believe_me i) (indexSetRange rs rv) v
-  _ | Right is = foldl (\v,i => updateAt (believe_me i) (indexSetRange rs (Vect.index (believe_me i) rv)) v) v is
+  _ | Left i = updateAt (assertFin i) (indexSetRange rs rv) v
+  _ | Right is = foldl (\v,i => updateAt (assertFin i) (indexSetRange rs (Vect.index (assertFin i) rv)) v) v is
 
 
 export

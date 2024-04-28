@@ -168,7 +168,8 @@ diagonal {n} mat with (viewShape mat)
 export
 -- TODO: throw an actual proof in here to avoid the unsafety
 minor : Fin (S m) -> Fin (S n) -> Matrix (S m) (S n) a -> Matrix m n a
-minor i j mat = believe_me $ mat!!..[Filter (/=i), Filter (/=j)]
+minor i j mat = replace {p = flip Array a} (believe_me $ Refl {x = ()})
+  $ mat!!..[Filter (/=i), Filter (/=j)]
 
 
 filterInd : Num a => (Nat -> Nat -> Bool) -> Matrix m n a -> Matrix m n a
@@ -568,7 +569,7 @@ solveLowerTri' {n} mat b with (viewShape b)
     construct {i=S i} (b :: bs) =
       let xs = construct bs
           i' = assert_total $ case natToFin i n of Just i' => i'
-      in (b - sum (zipWith (*) xs (reverse $ toVect $ believe_me $
+      in (b - sum (zipWith (*) xs (reverse $ toVect $ replace {p = flip Array a} (believe_me $ Refl {x=()}) $
                   mat !!.. [One i', EndBound (weaken i')]))) / mat!#[i,i] :: xs
 
 
@@ -581,7 +582,7 @@ solveUpperTri' {n} mat b with (viewShape b)
     construct i (b :: bs) =
       let xs = construct (S i) bs
           i' = assert_total $ case natToFin i n of Just i' => i'
-      in (b - sum (zipWith (*) xs (toVect $ believe_me $
+      in (b - sum (zipWith (*) xs (toVect $ replace {p = flip Array a} (believe_me $ Refl {x=()}) $
                   mat !!.. [One i', StartBound (FS i')]))) / mat!#[i,i] :: xs
 
 
