@@ -403,12 +403,12 @@ gaussStep i lu =
 export
 decompLU : Field a => (mat : Matrix m n a) -> Maybe (DecompLU mat)
 decompLU {m,n} mat with (viewShape mat)
-  _ | Shape [m,n] = map (MkLU . convertRep _ @{getRepC mat})
-    $ iterateN (minimum m n) (\i => (>>= gaussStepMaybe i)) (Just (convertRep Delayed mat))
+  _ | Shape [m,n] = map MkLU
+    $ iterateN (minimum m n) (\i => (>>= gaussStepMaybe i)) (Just mat)
   where
     gaussStepMaybe : Fin (minimum m n) -> Matrix m n a -> Maybe (Matrix m n a)
     gaussStepMaybe i mat = if mat!#[cast i,cast i] == 0 then Nothing
-                           else Just (gaussStep i mat)
+                           else Just $ gaussStep i mat
 
 
 ||| The LUP decomposition of a matrix.
@@ -512,17 +512,14 @@ decompLUP : FieldCmp a => (mat : Matrix m n a) -> DecompLUP mat
 decompLUP {m,n} mat with (viewShape mat)
   decompLUP {m=0,n} mat | Shape [0,n] = MkLUP mat identity 0
   decompLUP {m=S m,n=0} mat | Shape [S m,0] = MkLUP mat identity 0
-  decompLUP {m=S m,n=S n} mat | Shape [S m,S n] = undelay $
-    iterateN (S $ minimum m n) gaussStepSwap (MkLUP (convertRep Delayed mat) identity 0)
+  decompLUP {m=S m,n=S n} mat | Shape [S m,S n] =
+    iterateN (S $ minimum m n) gaussStepSwap (MkLUP mat identity 0)
   where
-    undelay : DecompLUP mat -> DecompLUP mat
-    undelay (MkLUP mat' p sw) = MkLUP (convertRep _ @{getRepC mat} mat') p sw
-
     maxIndex : (s,a) -> List (s,a) -> (s,a)
     maxIndex x [] = x
     maxIndex _ [x] = x
     maxIndex x ((a,b)::(c,d)::xs) =
-      if abslt b d then assert_total $ maxIndex x ((c,d)::xs)
+      if abslt b d then maxIndex x ((c,d)::xs)
                    else assert_total $ maxIndex x ((a,b)::xs)
 
     gaussStepSwap : Fin (S $ minimum m n) -> DecompLUP mat -> DecompLUP mat

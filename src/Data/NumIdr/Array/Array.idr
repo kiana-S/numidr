@@ -388,6 +388,12 @@ export
 convertRep : (rep : Rep) -> RepConstraint rep a => Array s a -> Array s a
 convertRep rep (MkArray _ s arr) = MkArray rep s (convertRepPrim arr)
 
+||| Temporarily convert an array to a delayed representation to make modifying
+||| it more efficient, then convert it back to its original representation.
+export
+delayed : (Array s a -> Array s' a) -> Array s a -> Array s' a
+delayed f arr = convertRep (getRep arr) @{getRepC arr} $ f $ convertRep Delayed arr
+
 ||| Resize the array to a new shape, preserving the coordinates of the original
 ||| elements. New coordinates are filled with a default value.
 |||
