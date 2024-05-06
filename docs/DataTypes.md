@@ -125,27 +125,7 @@ A transform is a wrapper type for a square matrix with certain properties that c
 Transform : (ty : TransType) -> (n : Nat) -> (a : Type) -> Type
 ```
 
-The `TransType` parameter dictates what kind of transform it is. These eight options are currently available:
-
-**Linear Types:**
-- `Trivial` (always the identity transformation)
-- `Rotation`
-- `Orthonormal` (rotation + reflection)
-- `Linear`
-
-**Affine Types:**
-- `Translation`
-- `Rigid` (rotation + translation)
-- `Isometry` (rotation + reflection + translation)
-- `Affine`
-
-The `TransType` value is obtained by prepending a capital T to these names. For example, an isometry may have the type `Isometry 3 Double`, which is an alias for `Transform TIsometry 3 Double`.
-
-#### The Point Type
-
-Transforms behave differently from regular matrices when applied to a vector. When a non-linear transform is used, the transform is first linearized, so that vectors only have linear transformations applied to them. **This is not a bug!**
-
-In order to properly apply these transforms, the `Point` type must be used, which is a wrapper around the `Vector` type that supports these transforms. This separation between points and vectors is intended to make working with affine transformations more convenient, as it mirrors the separation between points and vectors in affine algebra.
+The `TransType` parameter dictates what kind of transform it is. More information on transforms and their operations can be found in the [Transforms](Transforms.md) chapter.
 
 ### Permutations
 

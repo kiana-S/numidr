@@ -85,16 +85,19 @@ With ranged indexing, a sub-array of the original array is accessed or modified.
 - `Bounds x y` - Every index from `x` (inclusive) to `y` (exclusive)
 - `StartBound x` - Every index from `x` to the end of the axis
 - `EndBound y` - Every index from the start of the axis to `y`
+- `One i`, `One' i` - The single index `i`
 - `All` - Every index in the axis
 - `Indices xs` - A list of indices in the axis
 - `Filter p` - A predicate specifying which indices to access or modify
 
-There is also an extra specifier, `One i`, that selects exactly one index of the axis. It is only usable in safe indexing, and it is notable for being the only range specifier that decreases the rank of the sub-array. For example, the following matrix access returns the first column as a vector due to `One` being used:
+The range specifier `One` is special, as it is the only range specifier that decreases the rank of the resulting array. For example, the following matrix access returns the first column as a vector due to `One` being used:
 
 ```idris
 matrix [[2, 0], [1, 2]] !!.. [All, One 0]
   == vector [2, 1]
 ```
+
+`One'` does not decrease the rank of the result in this way.
 
 ## Standard Interface Methods
 

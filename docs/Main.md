@@ -13,4 +13,4 @@ If you're familiar with the Python library [NumPy](https://numpy.org/) or anythi
 
 ### Advanced Concepts
 
-5. Array Representations
+5. Array Representations (coming soon!)
