@@ -119,7 +119,7 @@ These are useful for clarity when working with both homogeneous and non-homogene
 
 ### Transforms
 
-A transform is a wrapper type for a matrix with certain properties that can be used to transform points in space.
+A transform is a wrapper type for a square matrix with certain properties that can be used to transform points in space.
 
 ```idris
 Transform : (ty : TransType) -> (n : Nat) -> (a : Type) -> Type

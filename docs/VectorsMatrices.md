@@ -77,11 +77,13 @@ interface MultMonoid a => MultGroup a where
   inverse : a -> a
 ```
 
-The `identity` function returns an identity matrix, and `inverse` calculates a matrix's inverse. Note that `inverse` cannot tell you if an inverse of your matrix does not exist; if you want to handle that case, use `tryInverse` instead.
+The `identity` function returns an identity matrix, and `inverse` calculates a matrix's inverse. Note that `inverse` cannot tell you if an inverse of your matrix does not exist; if you want to handle that possibility, use `tryInverse` instead.
 
 ```idris
 tryInverse : FieldCmp a => Matrix' n a -> Maybe (Matrix' n a)
 ```
+
+You can also use the `invertible` predicate to test if a matrix has an inverse.
 
 #### LU and LUP Decomposition
 
