@@ -568,9 +568,8 @@ solveLowerTri' {n} mat b with (viewShape b)
     construct [] = []
     construct {i=S i} (b :: bs) =
       let xs = construct bs
-          i' = assert_total $ case natToFin i n of Just i' => i'
       in (b - sum (zipWith (*) xs (reverse $ toVect $ replace {p = flip Array a} (believe_me $ Refl {x=()}) $
-                  mat !!.. [One i', EndBound (weaken i')]))) / mat!#[i,i] :: xs
+                  mat !#.. [One i, EndBound i]))) / mat!#[i,i] :: xs
 
 
 solveUpperTri' : Field a => Matrix' n a -> Vector n a -> Vector n a
@@ -581,9 +580,8 @@ solveUpperTri' {n} mat b with (viewShape b)
     construct _ [] = []
     construct i (b :: bs) =
       let xs = construct (S i) bs
-          i' = assert_total $ case natToFin i n of Just i' => i'
       in (b - sum (zipWith (*) xs (toVect $ replace {p = flip Array a} (believe_me $ Refl {x=()}) $
-                  mat !!.. [One i', StartBound (FS i')]))) / mat!#[i,i] :: xs
+                  mat !#.. [One i, StartBound (S i)]))) / mat!#[i,i] :: xs
 
 
 ||| Solve a linear equation, assuming the matrix is lower triangular.
@@ -628,6 +626,7 @@ solve mat = solveWithLUP mat (decompLUP mat)
 --------------------------------------------------------------------------------
 
 
+||| Determine whether a matrix has an inverse.
 export
 invertible : FieldCmp a => Matrix' n a -> Bool
 invertible {n} mat with (viewShape mat)

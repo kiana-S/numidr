@@ -23,10 +23,6 @@ update : Coords s -> (a -> a) -> Vects s a -> Vects s a
 update [] f v = f v
 update (i :: is) f v = updateAt i (update is f) v
 
-export %unsafe
-assertFin : Nat -> Fin n
-assertFin n = natToFinLt n @{believe_me Oh}
-
 export
 indexRange : {s : _} -> (rs : CoordsRange s) -> Vects s a -> Vects (newShape rs) a
 indexRange [] v = v
