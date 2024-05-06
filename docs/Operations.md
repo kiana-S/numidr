@@ -1,5 +1,10 @@
 # Basic Operations on Arrays
 
+> [!WARNING]
+> Arrays and their associated functions are not intended to be evaluated at compile-time. If you try to compute an array in the REPL, you will not get the output you expect!
+>
+> If you really need to use the REPL to test array code, use `:exec`.
+
 ## Constructing Arrays
 
 The most important array constructor is `array`, which returns an array of the specified values:
@@ -27,7 +32,7 @@ ones [2, 2, 3]
 
 There are a few simple functions for accessing basic properties of arrays: `shape` and `rank`, which are self-explanatory, and `size`, which returns the total number of elements in the array.
 
-The `shape` accessor is sufficient for most uses, but it can cause problems with the type-checker, as for an array `arr : Array s a` the type checker does not know that `shape arr` and `s` are equal. To solve this problem, a view for accessing the shape is provided:
+The `shape` accessor is sufficient for most uses, but it can cause problems with the type-checker, as for an array `arr : Array s a` the type checker does not know that `shape arr` and `s` are equal. To solve this problem, there is a view:
 
 ```idris
 example {s} arr with (viewShape arr)
@@ -62,7 +67,7 @@ Not all combinations of these categories are defined by the library. Here are th
 | **Update** | `indexUpdate`   | `indexUpdateRange`     | `indexUpdateNB`   |                          |                       |                              |
 | **Set**    | `indexSet`      | `indexSetRange`        | `indexSetNB`      |                          |                       |                              |
 
-The accessor functions have operator forms for convenience, also specified within the table.
+The accessor functions have operator forms for convenience.
 
 ### Specifying Coordinates
 
@@ -77,7 +82,7 @@ arr !! [1, 0]
 
 With ranged indexing, a sub-array of the original array is accessed or modified. This sub-array is given by a list of _range specifiers_, one for each axis, which can be one of the following:
 
-- `Bounds x y` - Every index from `x` to `y`
+- `Bounds x y` - Every index from `x` (inclusive) to `y` (exclusive)
 - `StartBound x` - Every index from `x` to the end of the axis
 - `EndBound y` - Every index from the start of the axis to `y`
 - `All` - Every index in the axis
@@ -117,7 +122,7 @@ When folding or traversing the elements of an array, these elements are ordered 
 
 ### Concatenation and Stacking
 
-Two arrays can be concatenated along an axis, so long as all other axes have the same dimensions. Two matrices being concatenated along the row axis requires that they must have the same number of columns.
+Two arrays can be concatenated along an axis (`concat`), so long as all other axes have the same dimensions. Two matrices being concatenated along the row axis requires that they must have the same number of columns.
 
 ```idris
 -- 0 is the first axis i.e. the row axis
@@ -128,7 +133,7 @@ concat 0 (matrix [[1, 2], [3, 4]]) (matrix [[5, 6], [7, 8]])
              [7, 8]]
 ```
 
-Stacking is similar to concatenation, but slightly different. Stacking combines arrays with the exact same shape into a single array that is one rank higher. For example, vectors can be stacked along the row axis to obtain a matrix whose rows are the original vectors.
+Stacking (`stack`) is similar to concatenation, but slightly different. Stacking combines arrays with the exact same shape into a single array that is one rank higher. For example, vectors can be stacked along the row axis to obtain a matrix whose rows are the original vectors.
 
 ```idris
 stack 0 [vector [1, 2], vector [3, 4]]
@@ -149,7 +154,7 @@ reshape [3, 2] (vector [1, 2, 3, 4, 5, 6])
              [5, 6]]
 ```
 
-Arrays can also be resized, which changes their shape while keeping every element at the same index. A default element must be provided to fill any indices that did not exist in the original array.
+Arrays can also be resized with `resize`, which changes their shape while keeping every element at the same index. A default element must be provided to fill any indices that did not exist in the original array.
 
 ```idris
 resize [2, 4] 10 (matrix [[1, 2],
@@ -163,8 +168,10 @@ Instead of the `resize` function, one can also use the `resizeLTE` function, whi
 
 ### Transpose
 
-The `transpose` function reverses the axis order of an array. For matrices, this corresponds to the usual definition of switching rows and columns. There is also a postfix form `(.T)`.
+The `transpose` function reverses the axis order of an array: For `arr : Array [3,2,4] Int`, we have `transpose arr : Array [4,2,3] Int`. For matrices, this corresponds to the usual definition of switching rows and columns. There is also a postfix form `(.T)`.
 
 For more fine-grained control when rearranging arrays, there are the `swapAxes` and `permuteAxes` functions, where the first swaps only two axes and the second takes an arbitrary [permutation](DataTypes.md#Permutations). There are also `swapInAxis` and `permuteInAxis`, which permute inside an axis, e.g. swapping rows or columns in a matrix.
+
+Like with concatenation and stacking, the swap and permute functions have forms specific to vectors and matrices: `swapCoords` and `permuteCoords` for vectors, and `swapRows`, `permuteRows`, `swapColumns`, and `permuteColumns` for matrices.
 
 [Previous](DataTypes.md) | [Contents](Intro.md) | [Next](VectorsMatrices.md)

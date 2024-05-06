@@ -79,8 +79,6 @@ Vector n a = Array [n] a
 
 A vector's type signature and stored data is effectively identical to that of the standard library type `Vect`, whose elements are confusingly also called "vectors"; we often refer to those as "vects" to differentiate.
 
-Indices are typically written as lists of integers, but for vectors it is occasionally acceptable to write the single index number without putting it inside a list. This is mostly the case for indexing, where each indexing function has an alternate definition specifically for vectors.
-
 ### Matrices
 
 As mentioned before, a matrix is a rank-2 array:
@@ -145,12 +143,14 @@ The `TransType` value is obtained by prepending a capital T to these names. For 
 
 #### The Point Type
 
-Transforms behave differently from regular matrices when applied to a vector. When a non-linear transform is used, the transform is first linearized, so that vectors only have linear transformations applied to them. This is not a bug.
+Transforms behave differently from regular matrices when applied to a vector. When a non-linear transform is used, the transform is first linearized, so that vectors only have linear transformations applied to them. **This is not a bug!**
 
 In order to properly apply these transforms, the `Point` type must be used, which is a wrapper around the `Vector` type that supports these transforms. This separation between points and vectors is intended to make working with affine transformations more convenient, as it mirrors the separation between points and vectors in affine algebra.
 
 ### Permutations
 
 The type `Permutation n` represents a permutation of `n` elements. Permutations are mostly used internally for various algorithms, but they are also an input in various operations, such as those that permute the axes of an array.
+
+Permutations can be composed using `(*.)`, and a permutation can be converted into a matrix using `permuteM`.
 
 [Contents](Intro.md) | [Next](Operations.md)
