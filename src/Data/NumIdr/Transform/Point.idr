@@ -176,7 +176,7 @@ Traversable (Point n) where
 
 export
 Show a => Show (Point n a) where
-  showPrec d (MkPoint v) = showCon d "point" $ showArg $ elements v
+  showPrec d (MkPoint v) = showCon d "point" $ showArg $ toVect v
 
 export
 Cast a b => Cast (Point n a) (Point n b) where

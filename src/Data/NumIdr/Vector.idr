@@ -186,8 +186,8 @@ perp a b = a.x * b.y - a.y * b.x
 ||| Calculate the cross product of the two vectors.
 export
 cross : Neg a => Vector 3 a -> Vector 3 a -> Vector 3 a
-cross v1 v2 = let [a, b, c] = elements v1
-                  [x, y, z] = elements v2
+cross v1 v2 = let [a, b, c] = toVect v1
+                  [x, y, z] = toVect v2
               in  vector [b*z - c*y, c*x - a*z, a*y - b*x]
 
 ||| Calculate the triple product of the three vectors.
