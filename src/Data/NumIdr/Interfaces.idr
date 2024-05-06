@@ -31,16 +31,16 @@ export
 FieldCmp Double where
   abslt = (<) `on` abs
 
--- Alternative implementations of `Eq` and `FieldCmp` that compare floating
--- point numbers approximately, useful when working with transforms
+-- Alternative implementations of `Eq` and `FieldCmp` that compare approximately,
+-- useful when working with flating point numbers
 namespace Eq
   export
-  WithEpsilon : Double -> Eq Double
+  WithEpsilon : (Neg a, Abs a, Ord a) => a -> Eq a
   WithEpsilon ep = MkEq (\x,y => abs (x - y) < ep) (\x,y => abs (x - y) >= ep)
 
 namespace FieldCmp
   export
-  WithEpsilon : Double -> FieldCmp Double
+  WithEpsilon : (Neg a, Fractional a, Abs a, Ord a) => a -> FieldCmp a
   WithEpsilon ep = MkFieldCmp @{WithEpsilon ep} ((<) `on` abs)
 
 --------------------------------------------------------------------------------

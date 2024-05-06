@@ -25,12 +25,13 @@ isTranslation : Eq a => Num a => HMatrix' n a -> Bool
 isTranslation {n} mat with (viewShape mat)
   _ | Shape [S n,S n] = isHMatrix mat && getMatrix mat == identity
 
-||| Construct a translation given a vector.
-export
-translate : Num a => Vector n a -> Translation n a
-translate v = unsafeMkTrans (translationH v)
-
 ||| Try to construct a translation from a homogeneous matrix.
 export
 fromHMatrix : Eq a => Num a => HMatrix' n a -> Maybe (Translation n a)
 fromHMatrix mat = if isTranslation mat then Just (unsafeMkTrans mat) else Nothing
+
+
+||| Construct a translation given a vector.
+export
+translate : Num a => Vector n a -> Translation n a
+translate v = unsafeMkTrans (translationH v)
