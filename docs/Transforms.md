@@ -1,6 +1,6 @@
 # Transforms
 
-In code that works with linear algebra, it is common to use matrices as _transformations_, i.e. functions that take in a vector and output a new vector. These matrices can often be divided into categories based on the operations they perform, such as a rotation matrix or an affine transformation matrix.
+In code that works with linear algebra, it is common to use matrices as _transformations_, functions that take in a vector and output a new vector. These matrices can often be divided into categories based on the operations they perform, such as a rotation matrix or an affine transformation matrix.
 
 The `Transform` wrapper exists to encode these differing properties on the type level, as well as to provide extra utilities for working with matrices in this fashion.
 
@@ -26,7 +26,7 @@ A `Transform ty n a` is a wrapper over an `HMatrix' n a`. The `ty` parameter is 
 - `TRotation`
 - `TTrivial` (always the `identity`)
 
-The capital T at the beginning of each of these names identifies it as a `TransType` value. To make working with transforms smoother, NumIdr provides synonyms for transforms of each type. For example, `Isometry n a` is a synonym for `Transform TIsometry n a`.
+The capital T at the beginning of each of these names identifies it as a `TransType` value. To make working with transforms smoother, NumIdr provides synonyms for transforms of each type: for example, `Isometry n a` is a synonym for `Transform TIsometry n a`.
 
 ### Linear and Affine
 
@@ -50,9 +50,9 @@ For simplicity, both categories of transform are wrappers over homogeneous matri
 Some transform types can be cast into other types. For example, a `Rotation` can be cast into an `Orthonormal`, as all rotation matrices are orthonormal.
 
 ```idris
-rot : Rotation 3 Double
+rt : Rotation 3 Double
 
-cast rot : Orthonormal 3 Double
+cast rt : Orthonormal 3 Double
 ```
 
 In the diagram from the previous section, lower types can be cast into types higher up. Each linear type (on the left) can also be cast into the corresponding affine type (on the right).
@@ -63,8 +63,8 @@ There are multiple ways to construct transforms, either by wrapping a matrix or 
 
 For each transform type, `fromHMatrix` can be used to test if a homogeneous matrix satisfies the right properties, and converts it into a transform if it does. The `Rotation`, `Orthonormal` and `Linear` types also have `fromMatrix` for non-homogeneous matrices.
 
-> [!NOTE]
-> The `fromHMatrix` and `fromMatrix` constructors use exact equality comparisons when testing matrices, which can be an issue if your element type is `Double` or a similar inexact number type. To remedy this, NumIdr provides a `WithEpsilon` named implementation that defines equality approximately.
+> [!WARNING]
+> The `fromHMatrix` and `fromMatrix` constructors use exact equality comparisons when testing matrices, which can be a problem if your element type is `Double` or a similar inexact number type. To fix this issue, NumIdr provides a `WithEpsilon` named implementation that defines equality approximately and allows you to specify an epsilon value.
 >
 > ```idris
 > fromHMatrix @{WithEpsilon 1.0e-6} mat
@@ -74,7 +74,10 @@ There are also direct constructors for transforms, which are often more convenie
 
 ## Multiplication with Transforms
 
-Like most objects in NumIdr, transforms multiply with the generalized multiplication operator `(*.)`, and `identity` and `inverse` can also be used with transforms. There is no `tryInverse` function, as all transforms are required to be invertible.
+Like most objects in NumIdr, transforms multiply with the generalized multiplication operator `(*.)`, and `identity` and `inverse` can also be used with transforms.
+
+> [!IMPORTANT]
+> There is no `tryInverse` function for transforms. This is because all transforms are required to be invertible, so there isn't any need for it; you can safely use `inverse` in all circumstances.
 
 Transforms of any types can be multiplied. When two transforms of different types are multiplied, the resulting transform type is determined by taking the most specific type that both original types can be cast to. For example, an `Orthonormal` transform multiplied by a `Translation` returns an `Isometry`.
 
@@ -102,4 +105,4 @@ To remember the distinction between the two addition operators, the dot is alway
 
 This separation between points and vectors is intended to make working with affine transformations more convenient, as it mirrors the separation between points and vectors in affine algebra. These may feel like arbitrary restrictions, but you might be surprised by how convenient they are to work with!
 
-[Previous](VectorsMatrices.md) | [Contents](Intro.md)
+[Previous](VectorsMatrices.md) | [Contents](Contents.md)

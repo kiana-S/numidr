@@ -1,6 +1,6 @@
 # Basic Operations on Arrays
 
-> [!WARNING]
+> [!CAUTION]
 > Arrays and their associated functions are not intended to be evaluated at compile-time. If you try to compute an array in the REPL, you will not get the output you expect!
 >
 > If you really need to use the REPL to test array code, use `:exec`.
@@ -13,7 +13,7 @@ The most important array constructor is `array`, which returns an array of the s
 array [[1, 2, 3], [4, 5, 6]]
 ```
 
-Scalars, vectors and matrices have their own constructors, used in exactly the same way (`scalar`, `vector`, and `matrix`). These should be used instead of `array` whereever possible, as they provide more information to the type-checker.
+Scalars, vectors and matrices have their own constructors, used in exactly the same way (`scalar`, `vector`, and `matrix`). These should be used instead of `array` wherever possible, as they provide more information to the type-checker.
 
 There are also a few other, more basic constructors for convenience.
 
@@ -32,14 +32,13 @@ ones [2, 2, 3]
 
 There are a few simple functions for accessing basic properties of arrays: `shape` and `rank`, which are self-explanatory, and `size`, which returns the total number of elements in the array.
 
-The `shape` accessor is sufficient for most uses, but it can cause problems with the type-checker, as for an array `arr : Array s a` the type checker does not know that `shape arr` and `s` are equal. To solve this problem, there is a view:
-
-```idris
-example {s} arr with (viewShape arr)
-  _ | Shape s = ...
-```
-
-This will fully placate the type-checker, as the `s` returned by the view is proven to be equal to the shape of the array.
+> [!TIP]
+> The `shape` accessor is sufficient for most uses, but it can cause problems with the type-checker, as for an array `arr : Array s a` the type checker does not know that `shape arr` and `s` are equal. To solve this problem, you can use the `ShapeView`:
+>
+> ```idris
+> example {s} arr with (viewShape arr)
+>   _ | Shape s = ...
+> ```
 
 ## Indexing Arrays
 
@@ -114,8 +113,8 @@ matrix [[1, 1], [2, 5]] + matrix [[2, 3], [-1, 3]]
 
 This elementwise behavior holds for `(+)`, `(*)`, `(-)`, `(/)`, and `(<+>)`. **`(*)` is not matrix multiplication!** For the generalized multiplication operator, which includes matrix multiplication, see [the next chapter](VectorsMatrices.md).
 
-> [!NOTE]
-> Due to unfortunate restrictions in Idris's standard `Num` interface, the addition and multiplication operations can only be used when the array's shape is available at run-time. If this is not the case, you must use `zipwith (+)` or `zipWith (*)` instead.
+> [!WARNING]
+> Due to unfortunate restrictions in Idris's standard `Num` interface, `(+)` and `(*)` can only be used when the array's shape is available at run-time. If this is not the case, you must use `zipwith (+)` or `zipWith (*)` instead.
 
 ### `Foldable` and `Traversable`
 
@@ -177,4 +176,4 @@ For more fine-grained control when rearranging arrays, there are the `swapAxes` 
 
 Like with concatenation and stacking, the swap and permute functions have forms specific to vectors and matrices: `swapCoords` and `permuteCoords` for vectors, and `swapRows`, `permuteRows`, `swapColumns`, and `permuteColumns` for matrices.
 
-[Previous](DataTypes.md) | [Contents](Intro.md) | [Next](VectorsMatrices.md)
+[Previous](DataTypes.md) | [Contents](Contents.md) | [Next](VectorsMatrices.md)

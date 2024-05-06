@@ -4,7 +4,7 @@ As linear algebra is one of the main concerns of NumIdr, most of its provided fu
 
 ## The Generalized Multiplication Operator
 
-A linear algebra library wouldn't be very useful without matrix multiplication! While Idris's standard `(*)` operator would be a natural choice for this, the `Num` interface only allows for homogeneous multiplication, in which the inputs and output are all of the same type. To get around this, `(*)` is used for element-wise multiplication (a.k.a. the Hadamard product), and NumIdr defines a new interface `Mult`:
+A linear algebra library wouldn't be very useful without matrix multiplication! Since `(*)` is already used for element-wise multiplication, NumIdr defines a new interface `Mult`:
 
 ```idris
 interface Mult a b c where
@@ -21,7 +21,7 @@ The generalized multiplication operator `(*.)` covers matrix multiplication, sca
 
 ### Algebraic Operations
 
-Vectors can be added together with `(+)`, which performs element-wise addition. Scalar-vector multiplication is done with the generalized multiplication operator `(*.)`.
+Vectors can be added together with element-wise addition `(+)`. Scalar-vector multiplication is done with the generalized multiplication operator `(*.)`.
 
 ```idris
 2 *. (vector [1, 1] + vector [2, 3])
@@ -104,11 +104,8 @@ decompLUP : FieldCmp a => (mat : Matrix m n a) -> DecompLUP mat
 - `det` - Determinant of the matrix
 - `solve` - Apply an inverse matrix to a vector, useful for solving linear equations
 
-The `det` and `solve` operations require computing an LUP decomposition, which can be expensive. To avoid duplicating work, the variants `detWithLUP` and `solveWithLUP` allow a pre-computed LUP decomposition to be passed in.
-
-```idris
-det m == detWithLUP m (decompLUP m)
-```
+> [!TIP]
+> The `det` and `solve` operations require computing an LUP decomposition, which can be expensive. The variants `detWithLUP` and `solveWithLUP` allow an existing LUP decomposition to be passed in, which can make your code more efficient.
 
 ### Indexing
 
@@ -118,4 +115,4 @@ Aside from the usual array indexing functions, there are a few functions special
 - `diagonal` - Returns the diagonal elements of the matrix as a vector
 - `minor` - Removes a single row and column from the matrix
 
-[Previous](Operations.md) | [Contents](Intro.md) | [Next](Transforms.md)
+[Previous](Operations.md) | [Contents](Contents.md) | [Next](Transforms.md)

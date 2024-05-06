@@ -49,9 +49,6 @@ When determining the index of a value inside the array, the order of the indices
 > (as in "multi-dimensional array" in the previous section), or to the lengths of its
 > axes. Conventionally, NumIdr reserves "dimension" for the second meaning, and uses
 > "rank" for the first meaning.
->
-> This guide has ignored this convention until now to be more understandable to newcomers,
-> but will follow it from this point onward.
 
 ## Types of Arrays
 
@@ -133,4 +130,4 @@ The type `Permutation n` represents a permutation of `n` elements. Permutations 
 
 Permutations can be composed using `(*.)`, and a permutation can be converted into a matrix using `permuteM`.
 
-[Contents](Intro.md) | [Next](Operations.md)
+[Contents](Contents.md) | [Next](Operations.md)
