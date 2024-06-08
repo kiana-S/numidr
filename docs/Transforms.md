@@ -76,7 +76,7 @@ There are also direct constructors for transforms, which are often more convenie
 
 Like most objects in NumIdr, transforms multiply with the generalized multiplication operator `(*.)`, and `identity` and `inverse` can also be used with transforms.
 
-> [!IMPORTANT]
+> [!NOTE]
 > There is no `tryInverse` function for transforms. This is because all transforms are required to be invertible, so there isn't any need for it; you can safely use `inverse` in all circumstances.
 
 Transforms of any types can be multiplied. When two transforms of different types are multiplied, the resulting transform type is determined by taking the most specific type that both original types can be cast to. For example, an `Orthonormal` transform multiplied by a `Translation` returns an `Isometry`.

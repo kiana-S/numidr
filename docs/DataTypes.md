@@ -126,7 +126,7 @@ The `TransType` parameter dictates what kind of transform it is. More informatio
 
 ### Permutations
 
-The type `Permutation n` represents a permutation of `n` elements. Permutations are mostly used internally for various algorithms, but they are also an input in various operations, such as those that permute the axes of an array.
+The type `Permutation n` represents a permutation of `n` elements. Permutations are mostly used internally for various algorithms, but they are also an input in some operations, such as permuting the rows or columns of a matrix.
 
 Permutations can be composed using `(*.)`, and a permutation can be converted into a matrix using `permuteM`.
 

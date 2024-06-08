@@ -4,18 +4,14 @@ As linear algebra is one of the main concerns of NumIdr, most of its provided fu
 
 ## The Generalized Multiplication Operator
 
-A linear algebra library wouldn't be very useful without matrix multiplication! Since `(*)` is already used for element-wise multiplication, NumIdr defines a new interface `Mult`:
+A linear algebra library wouldn't be very useful without matrix multiplication! Since `(*)` is already used for element-wise multiplication, NumIdr defines a new interface `Mult` that can accept and return values of different types:
 
 ```idris
 interface Mult a b c where
   (*.) : a -> b -> c
-
--- Synonym for homogeneous cases:
-Mult' : Type -> Type
-Mult' a = Mult a a a
 ```
 
-The generalized multiplication operator `(*.)` covers matrix multiplication, scalar-vector multiplication, and any other operation that's vaguely multiplication-like.
+The generalized multiplication operator `(*.)` covers matrix multiplication, scalar-vector multiplication, and any other linear algebra operation that's vaguely multiplication-like.
 
 ## Vectors
 
